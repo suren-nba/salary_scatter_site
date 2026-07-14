@@ -28,7 +28,6 @@
   let resizeTimer;
 
   const els = {
-    footerPlayers: document.getElementById("footerPlayers"),
     statPlayers: document.getElementById("statPlayers"),
     statTeam: document.getElementById("statTeam"),
     statActual: document.getElementById("statActual"),
@@ -116,7 +115,6 @@
     els.statExpected.textContent = formatMoney(average(rows, "average_expected_salary_m"));
     els.statSurplus.innerHTML = formatSurplusHtml(average(rows, "expected_minus_actual_m"));
     els.chartStatus.textContent = `${rows.length} 名球员`;
-    els.footerPlayers.textContent = `${state.metadata.player_count ?? state.data.length}`;
   }
 
   function axisMin(field, values) {
