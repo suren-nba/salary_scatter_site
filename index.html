@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NBA 球员薪资价值 | NBA Salary Value Explorer</title>
+    <meta name="description" content="比较 EPM、DARKO、实际薪资与模型平均估值的 NBA 球员薪资价值可视化。">
+    <link rel="icon" href="./assets/brand/sr-logo.png">
+    <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer" aria-label="返回 SuRen NBA 主站">
+          <img src="./assets/brand/sr-logo.png" alt="SR Logo">
+        </a>
+        <div class="title-block">
+          <p class="eyebrow">NBA Salary Value Explorer</p>
+          <h1>NBA 球员薪资价值</h1>
+          <p>比较 EPM、DARKO、实际薪资与模型平均估值</p>
+        </div>
+        <div class="topbar__meta">
+          <a href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer">返回主站</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary-grid" aria-label="概览指标">
+        <article class="stat">
+          <span>当前球员</span>
+          <strong id="statPlayers">—</strong>
+        </article>
+        <article class="stat">
+          <span>当前球队</span>
+          <strong id="statTeam">全部球队</strong>
+        </article>
+        <article class="stat">
+          <span>平均实际薪资</span>
+          <strong id="statActual">—</strong>
+        </article>
+        <article class="stat">
+          <span>平均预期薪资</span>
+          <strong id="statExpected">—</strong>
+        </article>
+        <article class="stat">
+          <span>平均合同价值差</span>
+          <strong id="statSurplus">—</strong>
+        </article>
+      </section>
+
+      <section class="controls" aria-label="筛选与图表控制">
+        <label>
+          <span>球队筛选</span>
+          <select id="teamFilter"></select>
+        </label>
+        <label class="search-control">
+          <span>球员搜索</span>
+          <input id="playerSearch" type="search" placeholder="输入球员姓名" autocomplete="off">
+        </label>
+        <label>
+          <span>X 轴指标</span>
+          <select id="xMetric"></select>
+        </label>
+        <label>
+          <span>Y 轴指标</span>
+          <select id="yMetric"></select>
+        </label>
+        <label class="toggle-control">
+          <input id="avatarToggle" type="checkbox">
+          <span>筛选后少量球员显示头像散点</span>
+        </label>
+        <button id="resetBtn" type="button">重置</button>
+      </section>
+
+      <section class="chart-section">
+        <div class="section-heading">
+          <div>
+            <h2>薪资价值散点图</h2>
+            <p id="chartHelp">位于 y = x 参考线上方：Y 轴指标高于 X 轴指标；下方则相反。</p>
+          </div>
+          <span id="chartStatus" class="status-pill">—</span>
+        </div>
+        <div id="chart" class="chart" role="img" aria-label="NBA 球员薪资价值散点图"></div>
+      </section>
+
+      <section class="table-section">
+        <div class="section-heading">
+          <div>
+            <h2>球员薪资数据表</h2>
+            <p>表格与散点图联动，点击球员可快速定位。</p>
+          </div>
+          <span id="selectedPlayer" class="status-pill">未选中球员</span>
+        </div>
+        <div id="salaryTable"></div>
+      </section>
+
+      <section class="notes">
+        <h2>指标说明</h2>
+        <div class="notes-grid">
+          <article>
+            <h3>EPM 预期薪资</h3>
+            <p>基于上赛季出勤与EPM预估表现换算的薪资估计，单位为百万美元。</p>
+          </article>
+          <article>
+            <h3>DARKO 预测薪资</h3>
+            <p>基于 DARKO 预测价值换算的薪资估计，单位为百万美元。</p>
+          </article>
+          <article>
+            <h3>平均预期薪资</h3>
+            <p>EPM 预期薪资与 DARKO 预测薪资的简单平均。</p>
+          </article>
+          <article>
+            <h3>上赛季表现薪资</h3>
+            <p>根据上赛季表现价值换算的薪资参考。</p>
+          </article>
+          <article>
+            <h3>实际薪资</h3>
+            <p>球员当前实际薪资，单位为百万美元。</p>
+          </article>
+          <article class="wide-note">
+            <h3>合同价值差</h3>
+            <p><strong>合同价值差 = 平均预期薪资 − 实际薪资。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，合同可能存在溢价。该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>数据仅供可视化研究。模型估值不代表真实交易价值或正式薪资建议。</p>
+      <p>数据源：微博“库昊” · 共计<span id="footerPlayers">—</span> 名球员，休赛期期间球员所处球队或有错误 · <a href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer">surennba.com</a></p>
+    </footer>
+
+    <script src="./assets/vendor/echarts.min.js"></script>
+    <script src="./assets/vendor/tabulator.min.js"></script>
+    <script src="./assets/js/app.js"></script>
+  </body>
+</html>
