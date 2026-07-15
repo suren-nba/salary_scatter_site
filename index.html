@@ -29,12 +29,25 @@
     <main>
       <section class="summary-grid" aria-label="概览指标">
         <article class="stat">
-          <span>当前球员</span>
-          <strong id="statPlayers">—</strong>
+          <span>当前球队</span>
+          <strong id="statTeam" class="team-stat">
+            <img id="statTeamLogo" class="team-stat__logo" alt="" hidden>
+            <span id="statTeamLabel">全部球队</span>
+          </strong>
         </article>
         <article class="stat">
-          <span>当前球队</span>
-          <strong id="statTeam">全部球队</strong>
+          <span>最超值球员</span>
+          <strong class="player-stat">
+            <img id="statBestValueHeadshot" class="player-stat__headshot" alt="" hidden>
+            <span id="statBestValueName">—</span>
+          </strong>
+        </article>
+        <article class="stat">
+          <span>最溢价球员</span>
+          <strong class="player-stat">
+            <img id="statMostOverpaidHeadshot" class="player-stat__headshot" alt="" hidden>
+            <span id="statMostOverpaidName">—</span>
+          </strong>
         </article>
         <article class="stat">
           <span>平均实际薪资</span>
@@ -51,10 +64,17 @@
       </section>
 
       <section class="controls" aria-label="筛选与图表控制">
-        <label>
+        <div class="team-filter-control">
           <span>球队筛选</span>
-          <select id="teamFilter"></select>
-        </label>
+          <div id="teamPicker" class="team-picker">
+            <button id="teamFilterButton" class="team-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <img id="teamFilterLogo" class="team-picker__logo" alt="" hidden>
+              <span id="teamFilterLabel" class="team-picker__label">全部球队</span>
+              <span class="team-picker__chevron" aria-hidden="true"></span>
+            </button>
+            <div id="teamFilterMenu" class="team-picker__menu" role="listbox" aria-label="选择球队" hidden></div>
+          </div>
+        </div>
         <label class="search-control">
           <span>球员搜索</span>
           <input id="playerSearch" type="search" placeholder="输入球员姓名" autocomplete="off">
@@ -71,7 +91,7 @@
           <input id="avatarToggle" type="checkbox">
           <span>筛选后少量球员显示头像散点</span>
         </label>
-        <button id="resetBtn" type="button">重置</button>
+        <button id="resetBtn" class="reset-button" type="button">重置</button>
       </section>
 
       <section class="chart-section">

@@ -1,43 +1,65 @@
-# NBA Salary Value Explorer
+# salary.surennba.com
 
-纯静态 NBA 球员薪资价值可视化网站。页面直接读取本地 JSON，不使用 Shiny、数据库、后端 API、登录或 SSR。
+这是一个纯静态的 NBA 球员薪资价值可视化网站，用于展示球员实际薪资、模型预期薪资，以及二者之间的合同价值差。
 
-## 数据来源
+网站地址：
 
-- 网站源数据：`D:\nba\salary_scatter_web.json`
-- 原始头像：`D:\nba\headshot`
-- Logo 来源：`D:\nba\www\sr_logo_nav_white.png`
+- https://salary.surennba.com/
 
-本项目不会修改或覆盖上述原始文件。
+主站地址：
 
-## 数据处理方式
+- https://www.surennba.com/
 
-`scripts\prepare_site_data.py` 会读取源 JSON，检查 `player_id`，调用头像转换脚本，并仅保留成功转换出 WebP 头像的球员。生成的网站数据位于：
+## 项目由来
 
-- `data\salary_scatter_web.json`
-- `data\metadata.json`
-- `excluded_players.csv`
-- `headshot_conversion_report.csv`
+这个小网站的起点来自微博篮球博主 [库昊](https://weibo.com/u/1894121447) 提供的一组球员薪资估值数据。
 
-网站 JSON 中的 `headshot_file` 统一写为 `assets/headshots/{player_id}.webp`。
+库昊老师在 2026 年休赛期基于预测性数据，使用预测 EPM 和 DARKO 等指标替代传统单赛季数据，制作了一版球员预估薪水数据，用来观察球员新合同是否溢价。之后很多朋友希望可以查询具体球员的估值，于是这组数据被做成了独立网页，放入俗人网站体系中。
 
-## 头像转换方式
+这套页面没有直接并入 `surennba.com` 主站，而是单独放在 `salary.surennba.com`。原因是主站存在服务器实时计算、Cloudflare、Nginx 等链路，访问性能和稳定性受影响更大；而薪资页面本身数据量较小，本质上只需要读取一个 JSON 文件，所以更适合做成独立的纯静态前端网站。
 
-`scripts\convert_headshots.py` 使用 Pillow 将 `D:\nba\headshot\{player_id}.png` 转换为 WebP：
+也就是说，这个项目是一个轻量子站点：数据来自库昊，页面和可视化由俗人网站体系承载，代码以 JavaScript、CSS 和静态资源形式开源维护。
 
-- 输出母目录：`D:\nba\headshot(webp)`
-- 网站头像目录：`assets\headshots`
-- WebP quality：85
-- 保留透明通道
-- 不放大、不裁切、不增加背景
-- 已转换且源文件未更新的头像会跳过重复转换
+## 数据来源与算法说明
+
+- 数据来源：微博博主 [库昊](https://weibo.com/u/1894121447)
+- 算法说明：[2026 年自由市场梳理总结（1）谁最赚谁最亏？球员值多少钱是怎么算的](https://weibo.com/ttarticle/p/show?id=2309405316644200644649)
+- 页面入口：https://salary.surennba.com/
+
+数据仅供可视化研究，模型估值不代表真实交易价值或正式薪资建议。休赛期期间球员所处球队以及具体薪资或有错误，敬请谅解。
+
+## 功能
+
+- 球员薪资散点图
+- EPM、DARKO、平均预期薪资、上赛季表现薪资等指标切换
+- 球队筛选、球员搜索、球员选中联动
+- 球员薪资数据表
+- 球队 Logo 筛选
+- 当前球队、最超值球员、最溢价球员与球队薪资排名摘要
+- 本地头像、球队 Logo 和前端依赖资源，无需后端服务
+
+## 技术实现
+
+该项目是无构建静态站点：
+
+- `index.html`：页面结构
+- `assets/css/style.css`：页面样式
+- `assets/js/app.js`：数据加载、图表、筛选、表格联动
+- `data/salary_scatter_web.json`：网站使用的球员薪资数据
+- `assets/headshots/`：球员头像 WebP
+- `assets/team-logos/`：球队 Logo WebP
+- `assets/vendor/`：本地 ECharts、Tabulator 等前端依赖
+
+页面直接通过 `fetch()` 读取本地 JSON，不使用 Shiny、数据库、后端 API、登录或 SSR。
 
 ## 本地运行
 
-在项目目录运行：
+不要通过双击 `index.html` 测试页面。浏览器打开 `file://` 页面时，会限制本地 JSON 读取，导致数据加载失败。
 
-```powershell
-py -m http.server 8080
+在项目目录运行本地服务器：
+
+```bash
+python3 -m http.server 8080
 ```
 
 然后打开：
@@ -46,23 +68,40 @@ py -m http.server 8080
 http://localhost:8080
 ```
 
-不要通过双击 `index.html` 测试，因为浏览器对本地文件读取 JSON 有限制。
-
-## 更新数据步骤
-
-1. 更新 `D:\nba\salary_scatter_web.json`
-2. 更新或补充 `D:\nba\headshot` 中的 PNG 头像
-3. 运行：
+Windows 环境也可以使用：
 
 ```powershell
-py "D:\nba\salary_scatter_site\scripts\prepare_site_data.py"
+py -m http.server 8080
 ```
 
-4. 重新启动或刷新本地页面
-5. 验证筛选、搜索、图表轴切换、Tooltip 和表格联动
-6. 后续再执行 GitHub 推送和 EdgeOne Makers 部署
+## 数据处理
 
-## 目录说明
+数据准备脚本位于 `scripts/`：
+
+- `scripts/prepare_site_data.py`
+- `scripts/convert_headshots.py`
+
+原始数据和头像资源在本地处理后，会生成网站直接读取的静态资源：
+
+- `data/salary_scatter_web.json`
+- `data/metadata.json`
+- `excluded_players.csv`
+- `headshot_conversion_report.csv`
+- `assets/headshots/{player_id}.webp`
+
+头像转换使用 Pillow 输出 WebP，保留透明通道，不放大、不裁切、不增加背景。
+
+## 更新数据流程
+
+1. 更新源 JSON 数据。
+2. 更新或补充球员头像。
+3. 运行 `scripts/prepare_site_data.py`。
+4. 检查 `data/salary_scatter_web.json`、头像和转换报告。
+5. 本地启动 HTTP server，验证筛选、搜索、散点图、Tooltip、表格和球队摘要。
+6. 提交到 GitHub。
+7. 部署到静态托管平台。
+
+## 目录结构
 
 ```text
 salary_scatter_site
@@ -72,6 +111,7 @@ salary_scatter_site
 │  ├─ css
 │  ├─ headshots
 │  ├─ js
+│  ├─ team-logos
 │  └─ vendor
 ├─ data
 ├─ scripts
@@ -79,22 +119,21 @@ salary_scatter_site
 └─ .gitignore
 ```
 
-## GitHub 部署准备
+## 部署说明
 
-该项目是无构建静态站点，可直接将 `salary_scatter_site` 目录作为仓库根目录提交。确认：
+该项目可以直接将仓库根目录作为静态站点目录部署，无需构建命令、环境变量、后端 API 或数据库。
 
-- 所有路径均为相对路径
-- `data\salary_scatter_web.json` 已更新
-- `assets\headshots` 已包含所需 WebP
-- `assets\vendor` 已包含 ECharts 和 Tabulator 本地文件
+部署前确认：
 
-## EdgeOne Makers 部署准备
+- 所有资源路径均为相对路径。
+- `data/salary_scatter_web.json` 已更新。
+- `assets/headshots/` 已包含所需球员头像。
+- `assets/team-logos/` 已包含球队 Logo。
+- `assets/vendor/` 已包含页面依赖的本地前端库。
 
-后续可将 GitHub 仓库接入 EdgeOne Makers，静态根目录使用仓库根目录。无需环境变量、后端 API 或数据库。
+## 已知限制
 
-## 当前已知限制
-
-- 数据模型估值仅用于可视化和比较，不代表真实交易价值或正式薪资建议。
-- 无头像或头像转换失败的球员不会展示。
-- 球队信息以源 JSON 为准，不在前端推断交易或自由市场变化。
-- 普通散点默认使用圆点；仅在搜索、选中或少量球员筛选时突出头像，以避免一次加载大量图片。
+- 模型估值只适合可视化比较，不代表真实交易价值或正式薪资建议。
+- 球队归属和薪资数据以当前 JSON 为准，不在前端推断交易、买断或自由市场变化。
+- 无头像或头像转换失败的球员不会正常显示头像。
+- 普通散点默认使用圆点；仅在搜索、选中或少量筛选结果中突出头像，以避免一次加载大量图片。

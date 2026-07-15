@@ -11,6 +11,7 @@
   };
 
   const metricOrder = Object.keys(metricLabels);
+  const numberFontFamily = "Consolas, SFMono-Regular, Menlo, Monaco, monospace";
   const state = {
     data: [],
     metadata: {},
@@ -28,12 +29,21 @@
   let resizeTimer;
 
   const els = {
-    statPlayers: document.getElementById("statPlayers"),
     statTeam: document.getElementById("statTeam"),
+    statTeamLogo: document.getElementById("statTeamLogo"),
+    statTeamLabel: document.getElementById("statTeamLabel"),
+    statBestValueHeadshot: document.getElementById("statBestValueHeadshot"),
+    statBestValueName: document.getElementById("statBestValueName"),
+    statMostOverpaidHeadshot: document.getElementById("statMostOverpaidHeadshot"),
+    statMostOverpaidName: document.getElementById("statMostOverpaidName"),
     statActual: document.getElementById("statActual"),
     statExpected: document.getElementById("statExpected"),
     statSurplus: document.getElementById("statSurplus"),
-    teamFilter: document.getElementById("teamFilter"),
+    teamPicker: document.getElementById("teamPicker"),
+    teamFilterButton: document.getElementById("teamFilterButton"),
+    teamFilterLogo: document.getElementById("teamFilterLogo"),
+    teamFilterLabel: document.getElementById("teamFilterLabel"),
+    teamFilterMenu: document.getElementById("teamFilterMenu"),
     playerSearch: document.getElementById("playerSearch"),
     xMetric: document.getElementById("xMetric"),
     yMetric: document.getElementById("yMetric"),
@@ -71,13 +81,120 @@
   function formatSurplusHtml(value) {
     const label = formatMoney(value, true);
     const kind = !isNumber(value) || value === 0 ? "neutral" : value > 0 ? "positive" : "negative";
-    return `<span class="surplus-badge ${kind}">${label}</span>`;
+    return `<span class="surplus-value ${kind}">${label}</span>`;
   }
 
   function average(rows, field) {
     const values = rows.map((row) => row[field]).filter(isNumber);
     if (!values.length) return null;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
+  }
+
+  function teamLogoPath(team) {
+    return `./assets/team-logos/${team}.webp`;
+  }
+
+  function ordinal(rank) {
+    const mod100 = rank % 100;
+    if (mod100 >= 11 && mod100 <= 13) return `${rank}th`;
+    const suffix = { 1: "st", 2: "nd", 3: "rd" }[rank % 10] || "th";
+    return `${rank}${suffix}`;
+  }
+
+  function teamRank(field, team) {
+    if (team === "ALL") return null;
+    const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))];
+    const ranked = teams
+      .map((teamCode) => ({
+        team: teamCode,
+        value: average(state.data.filter((row) => row.team_abbreviation === teamCode), field),
+      }))
+      .filter((item) => isNumber(item.value))
+      .sort((a, b) => b.value - a.value || a.team.localeCompare(b.team));
+    const target = ranked.find((item) => item.team === team);
+    if (!target) return null;
+    return 1 + ranked.filter((item) => item.value > target.value).length;
+  }
+
+  function teamRankHtml(field) {
+    if (state.searchTerm.trim()) return "";
+    const rank = teamRank(field, state.selectedTeam);
+    if (!rank) return "";
+    return `<span class="team-rank" title="30 支球队中按平均值从高到低排名">${ordinal(rank)}</span>`;
+  }
+
+  function teamScopeRows() {
+    if (state.selectedTeam === "ALL") return state.data;
+    return state.data.filter((row) => row.team_abbreviation === state.selectedTeam);
+  }
+
+  function extremePlayer(rows, direction) {
+    const candidates = rows.filter((row) => isNumber(row.expected_minus_actual_m));
+    if (!candidates.length) return null;
+    return candidates.slice().sort((a, b) => {
+      const difference = direction === "max"
+        ? b.expected_minus_actual_m - a.expected_minus_actual_m
+        : a.expected_minus_actual_m - b.expected_minus_actual_m;
+      return difference || a.player_name.localeCompare(b.player_name);
+    })[0];
+  }
+
+  function updatePlayerStat(player, headshot, name) {
+    headshot.hidden = !player;
+    name.textContent = player ? player.player_name : "—";
+    if (player) {
+      headshot.src = player.headshot_file;
+      headshot.alt = player.player_name;
+    }
+  }
+
+  function setTeamPickerOpen(open) {
+    els.teamFilterButton.setAttribute("aria-expanded", String(open));
+    els.teamFilterMenu.hidden = !open;
+  }
+
+  function updateTeamPicker() {
+    const isAll = state.selectedTeam === "ALL";
+    els.teamFilterLogo.hidden = isAll;
+    els.teamFilterLabel.textContent = isAll ? "全部球队" : state.selectedTeam;
+    if (!isAll) {
+      els.teamFilterLogo.src = teamLogoPath(state.selectedTeam);
+      els.teamFilterLogo.alt = `${state.selectedTeam} 队徽`;
+    }
+    els.teamFilterMenu.querySelectorAll(".team-picker__option").forEach((option) => {
+      option.setAttribute("aria-selected", String(option.dataset.team === state.selectedTeam));
+    });
+  }
+
+  function makeTeamOption(team) {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "team-picker__option";
+    option.dataset.team = team;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", "false");
+
+    if (team === "ALL") {
+      option.classList.add("team-picker__option--all");
+    } else {
+      const logo = document.createElement("img");
+      logo.src = teamLogoPath(team);
+      logo.alt = "";
+      logo.loading = "lazy";
+      option.appendChild(logo);
+    }
+
+    const label = document.createElement("span");
+    label.textContent = team === "ALL" ? "全部球队" : team;
+    option.appendChild(label);
+    return option;
+  }
+
+  function setupTeamPicker() {
+    els.teamFilterMenu.appendChild(makeTeamOption("ALL"));
+    const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))].sort();
+    teams.forEach((team) => els.teamFilterMenu.appendChild(makeTeamOption(team)));
+    updateTeamPicker();
   }
 
   function setupSelects() {
@@ -89,13 +206,7 @@
     });
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
-
-    els.teamFilter.appendChild(new Option("全部球队", "ALL"));
-    const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))].sort();
-    teams.forEach((team) => {
-      const sample = state.data.find((row) => row.team_abbreviation === team);
-      els.teamFilter.appendChild(new Option(`${team} · ${sample.team_name}`, team));
-    });
+    setupTeamPicker();
   }
 
   function applyFilters() {
@@ -109,11 +220,27 @@
 
   function updateStats() {
     const rows = state.filtered;
-    els.statPlayers.textContent = rows.length.toLocaleString("zh-CN");
-    els.statTeam.textContent = state.selectedTeam === "ALL" ? "全部球队" : state.selectedTeam;
-    els.statActual.textContent = formatMoney(average(rows, "actual_salary_m"));
-    els.statExpected.textContent = formatMoney(average(rows, "average_expected_salary_m"));
-    els.statSurplus.innerHTML = formatSurplusHtml(average(rows, "expected_minus_actual_m"));
+    const teamRows = teamScopeRows();
+    const isAllTeams = state.selectedTeam === "ALL";
+    els.statTeamLogo.hidden = isAllTeams;
+    els.statTeamLabel.textContent = isAllTeams ? "全部球队" : state.selectedTeam;
+    if (!isAllTeams) {
+      els.statTeamLogo.src = teamLogoPath(state.selectedTeam);
+      els.statTeamLogo.alt = `${state.selectedTeam} 队徽`;
+    }
+    updatePlayerStat(
+      extremePlayer(teamRows, "max"),
+      els.statBestValueHeadshot,
+      els.statBestValueName,
+    );
+    updatePlayerStat(
+      extremePlayer(teamRows, "min"),
+      els.statMostOverpaidHeadshot,
+      els.statMostOverpaidName,
+    );
+    els.statActual.innerHTML = `<span class="numeric-value">${formatMoney(average(rows, "actual_salary_m"))}</span>${teamRankHtml("actual_salary_m")}`;
+    els.statExpected.innerHTML = `<span class="numeric-value">${formatMoney(average(rows, "average_expected_salary_m"))}</span>${teamRankHtml("average_expected_salary_m")}`;
+    els.statSurplus.innerHTML = `${formatSurplusHtml(average(rows, "expected_minus_actual_m"))}${teamRankHtml("expected_minus_actual_m")}`;
     els.chartStatus.textContent = `${rows.length} 名球员`;
   }
 
@@ -191,6 +318,7 @@
 
     chart.setOption({
       animationDuration: 300,
+      textStyle: { fontFamily: numberFontFamily },
       grid: { left: 64, right: 28, top: 36, bottom: 84 },
       tooltip: {
         trigger: "item",
@@ -254,7 +382,7 @@
   }
 
   function tableColumns() {
-    const moneyFormatter = (cell) => formatMoney(cell.getValue());
+    const moneyFormatter = (cell) => `<span class="numeric-value">${formatMoney(cell.getValue())}</span>`;
     const surplusFormatter = (cell) => formatSurplusHtml(cell.getValue());
     return [
       {
@@ -286,10 +414,29 @@
       data: state.filtered,
       index: "player_id",
       layout: "fitDataStretch",
+      columnDefaults: { vertAlign: "middle" },
       height: "620px",
       pagination: true,
       paginationSize: 25,
       paginationSizeSelector: [10, 20, 25, 50, 100],
+      locale: "zh-cn",
+      langs: {
+        "zh-cn": {
+          pagination: {
+            page_size: "每页数量",
+            page_title: "查看第",
+            first: "首页",
+            first_title: "首页",
+            last: "末页",
+            last_title: "末页",
+            prev: "上一页",
+            prev_title: "上一页",
+            next: "下一页",
+            next_title: "下一页",
+            all: "全部",
+          },
+        },
+      },
       movableColumns: false,
       placeholder: "没有符合当前筛选条件的球员",
       initialSort: [{ column: "average_expected_salary_m", dir: "desc" }],
@@ -343,9 +490,24 @@
   }
 
   function bindEvents() {
-    els.teamFilter.addEventListener("change", () => {
-      state.selectedTeam = els.teamFilter.value;
+    els.teamFilterButton.addEventListener("click", () => {
+      setTeamPickerOpen(els.teamFilterButton.getAttribute("aria-expanded") !== "true");
+    });
+    els.teamFilterMenu.addEventListener("click", (event) => {
+      const option = event.target.closest(".team-picker__option");
+      if (!option) return;
+      state.selectedTeam = option.dataset.team;
+      updateTeamPicker();
+      setTeamPickerOpen(false);
       refresh();
+    });
+    document.addEventListener("click", (event) => {
+      if (!els.teamPicker.contains(event.target)) setTeamPickerOpen(false);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || els.teamFilterButton.getAttribute("aria-expanded") !== "true") return;
+      setTeamPickerOpen(false);
+      els.teamFilterButton.focus();
     });
     els.playerSearch.addEventListener("input", () => {
       window.clearTimeout(els.playerSearch._timer);
@@ -373,7 +535,8 @@
       state.yMetric = "average_expected_salary_m";
       state.showAvatars = false;
       state.selectedPlayerId = null;
-      els.teamFilter.value = "ALL";
+      updateTeamPicker();
+      setTeamPickerOpen(false);
       els.playerSearch.value = "";
       els.xMetric.value = state.xMetric;
       els.yMetric.value = state.yMetric;
