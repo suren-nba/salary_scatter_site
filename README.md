@@ -32,10 +32,12 @@
 
 - 球员薪资散点图
 - EPM、DARKO、平均预期薪资、上赛季表现薪资等指标切换
-- 球队筛选、球员搜索、球员选中联动
+- 球队筛选（支持键盘操作）、球员搜索、球员选中联动
 - 球员薪资数据表
 - 球队 Logo 筛选
 - 当前球队、最超值球员、最溢价球员与球队薪资排名摘要
+- 深色模式（跟随系统，可手动切换并记忆）
+- 筛选与选中状态同步到 URL，可分享链接
 - 本地头像、球队 Logo 和前端依赖资源，无需后端服务
 
 ## 技术实现
@@ -43,8 +45,16 @@
 该项目是无构建静态站点：
 
 - `index.html`：页面结构
-- `assets/css/style.css`：页面样式
-- `assets/js/app.js`：数据加载、图表、筛选、表格联动
+- `assets/css/style.css`：页面样式（含深色模式变量）
+- `assets/js/`：原生 ES modules，无构建
+  - `main.js`：入口、事件绑定、统计卡与选中联动
+  - `state.js`：共享状态与筛选
+  - `format.js`：指标常量与格式化工具
+  - `chart.js`：ECharts 散点图配置与 Tooltip
+  - `table.js`：Tabulator 表格配置
+  - `teamPicker.js`：球队筛选下拉（含键盘导航）
+  - `theme.js`：深色模式切换与记忆
+  - `urlState.js`：URL hash 状态同步
 - `data/salary_scatter_web.json`：网站使用的球员薪资数据
 - `assets/headshots/`：球员头像 WebP
 - `assets/team-logos/`：球队 Logo WebP

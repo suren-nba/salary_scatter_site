@@ -21,6 +21,9 @@
         </div>
         <div class="topbar__meta">
           <span class="source-credit">数据来自微博-<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
+          <label class="theme-slider" title="配色主题：浅色">
+            <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="浅色">
+          </label>
           <a href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer">返回主站</a>
         </div>
       </div>
@@ -38,14 +41,14 @@
         <article class="stat">
           <span>最超值球员</span>
           <strong class="player-stat">
-            <img id="statBestValueHeadshot" class="player-stat__headshot" alt="" hidden>
+            <img id="statBestValueHeadshot" class="player-stat__headshot avatar" alt="" hidden>
             <span id="statBestValueName">—</span>
           </strong>
         </article>
         <article class="stat">
           <span>最溢价球员</span>
           <strong class="player-stat">
-            <img id="statMostOverpaidHeadshot" class="player-stat__headshot" alt="" hidden>
+            <img id="statMostOverpaidHeadshot" class="player-stat__headshot avatar" alt="" hidden>
             <span id="statMostOverpaidName">—</span>
           </strong>
         </article>
@@ -57,7 +60,7 @@
           <span>平均预期薪资</span>
           <strong id="statExpected">—</strong>
         </article>
-        <article class="stat">
+        <article class="stat stat--emphasis">
           <span>平均合同价值差</span>
           <strong id="statSurplus">—</strong>
         </article>
@@ -102,7 +105,9 @@
           </div>
           <span id="chartStatus" class="status-pill">—</span>
         </div>
-        <div id="chart" class="chart" role="img" aria-label="NBA 球员薪资价值散点图"></div>
+        <div id="chart" class="chart" role="img" aria-label="NBA 球员薪资价值散点图">
+          <div id="chartEmpty" class="chart-empty">数据加载中…</div>
+        </div>
       </section>
 
       <section class="table-section">
@@ -155,6 +160,6 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script src="./assets/js/app.js"></script>
+    <script type="module" src="./assets/js/main.js"></script>
   </body>
 </html>
