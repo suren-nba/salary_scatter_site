@@ -1,4 +1,4 @@
-import { average, isNumber } from "./format.js";
+import { average, isNumber } from "./format.js?v=20260722-3";
 
 export const state = {
   data: [],

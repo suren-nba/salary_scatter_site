@@ -1,12 +1,12 @@
-import { state } from "./state.js";
+import { state } from "./state.js?v=20260722-3";
 import {
   escapeHtml,
   formatMoney,
   isNumber,
   metricLabels,
   numberFontFamily,
-} from "./format.js";
-import { getTheme } from "./theme.js";
+} from "./format.js?v=20260722-3";
+import { getTheme } from "./theme.js?v=20260722-3";
 
 let chart = null;
 let chartEl = null;

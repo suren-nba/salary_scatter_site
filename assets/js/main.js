@@ -6,8 +6,8 @@ import {
   formatSurplusHtml,
   teamLogoPath,
   ordinal,
-} from "./format.js";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js";
+} from "./format.js?v=20260722-3";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260722-3";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -15,22 +15,24 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js";
-import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js";
+} from "./teamPicker.js?v=20260722-3";
+import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js?v=20260722-3";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js";
+} from "./table.js?v=20260722-3";
 import {
   initBeeswarm,
   rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js";
-import { applyUrlState, createShareUrl } from "./urlState.js";
+} from "./beeswarm.js?v=20260722-3";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260722-3";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260722-3";
+
+const DEPLOY_VERSION = "20260722-3";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -53,7 +55,6 @@ const els = {
   yMetric: document.getElementById("yMetric"),
   avatarToggle: document.getElementById("avatarToggle"),
   resetBtn: document.getElementById("resetBtn"),
-  shareViewBtn: document.getElementById("shareViewBtn"),
   chart: document.getElementById("chart"),
   chartEmpty: document.getElementById("chartEmpty"),
   chartStatus: document.getElementById("chartStatus"),
@@ -68,6 +69,12 @@ const els = {
 };
 
 let resizeTimer;
+let urlTimer;
+
+function scheduleUrlWrite() {
+  window.clearTimeout(urlTimer);
+  urlTimer = window.setTimeout(writeUrlState, 200);
+}
 
 function teamRankHtml(field) {
   if (state.searchTerm.trim()) return "";
@@ -123,6 +130,7 @@ function selectPlayer(playerId) {
   if (player) syncTableSelection(playerId);
   updateChart();
   updateBeeswarm();
+  scheduleUrlWrite();
 }
 
 function selectBeeswarmMetric(field) {
@@ -130,6 +138,7 @@ function selectBeeswarmMetric(field) {
   state.beeswarmMetric = field;
   syncBeeswarmMetricHeader(field);
   updateBeeswarm();
+  scheduleUrlWrite();
 }
 
 function refresh() {
@@ -142,28 +151,7 @@ function refresh() {
   updateChart();
   updateBeeswarm();
   updateTable(state.selectedPlayerId);
-}
-
-async function shareCurrentView() {
-  const shareUrl = createShareUrl();
-  window.clearTimeout(els.shareViewBtn._resetTimer);
-  els.shareViewBtn.textContent = "链接已生成";
-  if (navigator.clipboard?.writeText) {
-    try {
-      await Promise.race([
-        navigator.clipboard.writeText(shareUrl),
-        new Promise((_, reject) => {
-          window.setTimeout(() => reject(new Error("Clipboard timeout")), 700);
-        }),
-      ]);
-      els.shareViewBtn.textContent = "链接已复制";
-    } catch {
-      // The address bar still contains the generated share URL.
-    }
-  }
-  els.shareViewBtn._resetTimer = window.setTimeout(() => {
-    els.shareViewBtn.textContent = "分享视图";
-  }, 1800);
+  scheduleUrlWrite();
 }
 
 function chooseTeam(team) {
@@ -262,15 +250,18 @@ function bindEvents() {
     state.xMetric = els.xMetric.value;
     syncChartAxisSummary();
     updateChart();
+    scheduleUrlWrite();
   });
   els.yMetric.addEventListener("change", () => {
     state.yMetric = els.yMetric.value;
     syncChartAxisSummary();
     updateChart();
+    scheduleUrlWrite();
   });
   els.avatarToggle.addEventListener("change", () => {
     state.showAvatars = els.avatarToggle.checked;
     updateChart();
+    scheduleUrlWrite();
   });
   els.resetBtn.addEventListener("click", () => {
     state.selectedTeam = "ALL";
@@ -291,7 +282,6 @@ function bindEvents() {
     syncBeeswarmMetricHeader(state.beeswarmMetric);
     refresh();
   });
-  els.shareViewBtn.addEventListener("click", shareCurrentView);
   els.themeSlider.addEventListener("input", () => {
     setThemeByIndex(Number(els.themeSlider.value));
     syncThemeSlider();
@@ -319,8 +309,8 @@ async function init() {
   syncThemeSlider();
 
   const [data, metadata] = await Promise.all([
-    fetch("./data/salary_scatter_web.json").then((response) => response.json()),
-    fetch("./data/metadata.json").then((response) => response.json()),
+    fetch(`./data/salary_scatter_web.json?v=${DEPLOY_VERSION}`).then((response) => response.json()),
+    fetch(`./data/metadata.json?v=${DEPLOY_VERSION}`).then((response) => response.json()),
   ]);
   state.data = data;
   state.metadata = metadata;
@@ -348,6 +338,7 @@ async function init() {
   updateChart();
   updateBeeswarm();
   bindEvents();
+  scheduleUrlWrite();
 }
 
 init().catch((error) => {

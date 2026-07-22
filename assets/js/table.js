@@ -1,5 +1,5 @@
-import { state } from "./state.js";
-import { escapeHtml, formatMoney, formatSurplusHtml } from "./format.js";
+import { state } from "./state.js?v=20260722-3";
+import { escapeHtml, formatMoney, formatSurplusHtml } from "./format.js?v=20260722-3";
 
 let table = null;
 const metricFields = new Set([

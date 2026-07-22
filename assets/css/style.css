@@ -426,10 +426,6 @@ main {
   flex: 0 0 auto;
 }
 
-.controls .share-view-button {
-  flex: 0 0 auto;
-}
-
 .controls label > span,
 .team-filter-control > span {
   display: block;
@@ -602,21 +598,6 @@ main {
 }
 
 .controls .reset-button:hover {
-  background: color-mix(in srgb, var(--dark) 86%, var(--action-ink));
-}
-
-.controls .share-view-button {
-  height: 42px;
-  border: 0;
-  border-radius: 6px;
-  padding: 0 18px;
-  background: var(--dark);
-  color: var(--action-ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-.controls .share-view-button:hover {
   background: color-mix(in srgb, var(--dark) 86%, var(--action-ink));
 }
 
@@ -1078,8 +1059,7 @@ footer a {
   .search-control,
   .controls label:not(.toggle-control):not(.search-control),
   .toggle-control,
-  .controls .reset-button,
-  .controls .share-view-button {
+  .controls .reset-button {
     flex: 1 1 100%;
   }
 

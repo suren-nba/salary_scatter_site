@@ -1,5 +1,5 @@
-import { state } from "./state.js";
-import { metricLabels } from "./format.js";
+import { state } from "./state.js?v=20260722-3";
+import { metricLabels } from "./format.js?v=20260722-3";
 
 export function applyUrlState(els) {
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -43,7 +43,7 @@ export function applyUrlState(els) {
   }
 }
 
-export function createShareUrl() {
+export function writeUrlState() {
   const params = new URLSearchParams();
   if (state.selectedTeam !== "ALL") params.set("team", state.selectedTeam);
   const term = state.searchTerm.trim();
@@ -60,5 +60,4 @@ export function createShareUrl() {
   } else {
     history.replaceState(null, "", window.location.pathname + window.location.search);
   }
-  return window.location.href;
 }
