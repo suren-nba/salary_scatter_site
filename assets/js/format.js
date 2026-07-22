@@ -31,7 +31,7 @@ export function formatMoney(value, signed = false) {
     if (value < 0) return `−$${abs}M`;
     return "$0.0M";
   }
-  return `$${value.toFixed(1)}M`;
+  return value < 0 ? `−$${abs}M` : `$${abs}M`;
 }
 
 export function formatSurplusHtml(value) {

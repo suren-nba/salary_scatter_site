@@ -1,4 +1,5 @@
 .DS_Store
+.Rhistory
 Thumbs.db
 *.log
 __pycache__/

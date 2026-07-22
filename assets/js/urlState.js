@@ -1,5 +1,5 @@
-import { state } from "./state.js?v=20260722-3";
-import { metricLabels } from "./format.js?v=20260722-3";
+import { state } from "./state.js?v=20260722-4";
+import { metricLabels } from "./format.js?v=20260722-4";
 
 export function applyUrlState(els) {
   const params = new URLSearchParams(window.location.hash.slice(1));

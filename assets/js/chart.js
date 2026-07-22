@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=20260722-3";
+import { state } from "./state.js?v=20260722-4";
 import {
   metricLabels,
   metricOrder,
@@ -6,8 +6,8 @@ import {
   isNumber,
   formatMoney,
   escapeHtml,
-} from "./format.js?v=20260722-3";
-import { getTheme } from "./theme.js?v=20260722-3";
+} from "./format.js?v=20260722-4";
+import { getTheme } from "./theme.js?v=20260722-4";
 
 let chart = null;
 let chartEl = null;
@@ -108,6 +108,7 @@ export function updateChart() {
     const smallTeamAvatar = state.showAvatars && rows.length <= 80;
     return matchesSearch || selected || smallTeamAvatar;
   });
+  const selectedVisible = rows.some((row) => row.player_id === state.selectedPlayerId);
 
   chartEl.setAttribute(
     "aria-label",
@@ -123,8 +124,12 @@ export function updateChart() {
     value: [row[state.xMetric], row[state.yMetric]],
     row,
     itemStyle: {
-      color: row.expected_minus_actual_m >= 0 ? colors.positive : colors.negative,
-      opacity: state.selectedPlayerId && row.player_id !== state.selectedPlayerId ? 0.45 : 0.84,
+      color: !isNumber(row.expected_minus_actual_m)
+        ? colors.muted
+        : row.expected_minus_actual_m >= 0
+          ? colors.positive
+          : colors.negative,
+      opacity: selectedVisible && row.player_id !== state.selectedPlayerId ? 0.45 : 0.84,
     },
   }));
 

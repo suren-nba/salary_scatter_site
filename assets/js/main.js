@@ -6,8 +6,8 @@ import {
   formatSurplusHtml,
   teamLogoPath,
   ordinal,
-} from "./format.js?v=20260722-3";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260722-3";
+} from "./format.js?v=20260722-4";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260722-4";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -15,24 +15,24 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260722-3";
-import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js?v=20260722-3";
+} from "./teamPicker.js?v=20260722-4";
+import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js?v=20260722-4";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js?v=20260722-3";
+} from "./table.js?v=20260722-4";
 import {
   initBeeswarm,
   rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260722-3";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260722-3";
-import { applyUrlState, writeUrlState } from "./urlState.js?v=20260722-3";
+} from "./beeswarm.js?v=20260722-4";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260722-4";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260722-4";
 
-const DEPLOY_VERSION = "20260722-3";
+const DEPLOY_VERSION = "20260722-4";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -297,6 +297,14 @@ function bindEvents() {
   });
 }
 
+async function fetchJson(path) {
+  const response = await fetch(`${path}?v=${DEPLOY_VERSION}`);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${path}: HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
 async function init() {
   if (!window.echarts || !window.Tabulator) {
     throw new Error("ECharts or Tabulator did not load.");
@@ -309,8 +317,8 @@ async function init() {
   syncThemeSlider();
 
   const [data, metadata] = await Promise.all([
-    fetch(`./data/salary_scatter_web.json?v=${DEPLOY_VERSION}`).then((response) => response.json()),
-    fetch(`./data/metadata.json?v=${DEPLOY_VERSION}`).then((response) => response.json()),
+    fetchJson("./data/salary_scatter_web.json"),
+    fetchJson("./data/metadata.json"),
   ]);
   state.data = data;
   state.metadata = metadata;
@@ -343,7 +351,11 @@ async function init() {
 
 init().catch((error) => {
   console.error(error);
+  const message = "数据加载失败，请检查网络连接或稍后刷新。";
   els.chartStatus.textContent = "加载失败";
-  els.chartEmpty.textContent = "数据加载失败，请检查本地服务器和 data 目录。";
+  els.chartEmpty.textContent = message;
   els.chartEmpty.hidden = false;
+  els.beeswarmStatus.textContent = "加载失败";
+  els.beeswarmEmpty.textContent = message;
+  els.beeswarmEmpty.hidden = false;
 });
