@@ -1,18 +1,18 @@
 const STORAGE_KEY = "salary-theme";
 const media = window.matchMedia("(prefers-color-scheme: dark)");
-const THEMES = ["cream", "light", "gray", "taupe", "green"];
+const THEMES = ["light", "gray", "taupe", "green", "dark"];
 const THEME_LABELS = {
-  cream: "米白色",
   light: "珊瑚浅色",
   gray: "灰色",
   taupe: "暖棕色",
   green: "墨绿色",
+  dark: "曜黑色",
 };
 
 let followsSystem = true;
 
 function systemTheme() {
-  return media.matches ? "green" : "cream";
+  return media.matches ? "dark" : "light";
 }
 
 export function getTheme() {
@@ -56,5 +56,5 @@ export function getThemeIndex(theme = getTheme()) {
 }
 
 export function getThemeLabel(theme = getTheme()) {
-  return THEME_LABELS[theme] || THEME_LABELS.cream;
+  return THEME_LABELS[theme] || THEME_LABELS.light;
 }

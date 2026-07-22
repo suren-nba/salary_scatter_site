@@ -43,7 +43,7 @@ export function applyUrlState(els) {
   }
 }
 
-export function writeUrlState() {
+export function createShareUrl() {
   const params = new URLSearchParams();
   if (state.selectedTeam !== "ALL") params.set("team", state.selectedTeam);
   const term = state.searchTerm.trim();
@@ -60,4 +60,5 @@ export function writeUrlState() {
   } else {
     history.replaceState(null, "", window.location.pathname + window.location.search);
   }
+  return window.location.href;
 }

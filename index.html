@@ -20,11 +20,11 @@
         </div>
         <div class="topbar__meta">
           <span class="source-credit">数据来自微博-<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
-          <div class="theme-control" title="配色主题：米白色">
+          <div class="theme-control" title="配色主题：珊瑚浅色">
             <span class="theme-control__label">配色</span>
             <label class="theme-slider">
               <span class="theme-slider__endpoint theme-slider__endpoint--light" aria-hidden="true"></span>
-              <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="米白色">
+              <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="珊瑚浅色">
               <span class="theme-slider__endpoint theme-slider__endpoint--dark" aria-hidden="true"></span>
             </label>
           </div>
@@ -99,6 +99,13 @@
           <span>筛选后少量球员显示头像散点</span>
         </label>
         <button id="resetBtn" class="reset-button" type="button">重置</button>
+        <button
+          id="shareViewBtn"
+          class="share-view-button"
+          type="button"
+          title="生成带有状态后缀的链接，保存当前的数据筛选情况。"
+          aria-live="polite"
+        >分享视图</button>
       </section>
 
       <section class="chart-section">
