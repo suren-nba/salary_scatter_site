@@ -17,7 +17,18 @@ import {
   getActiveOption,
 } from "./teamPicker.js";
 import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js";
-import { setupTable, updateTable, syncTableSelection } from "./table.js";
+import {
+  setupTable,
+  updateTable,
+  syncTableSelection,
+  syncBeeswarmMetricHeader,
+} from "./table.js";
+import {
+  initBeeswarm,
+  rebuildBeeswarm,
+  resizeBeeswarm,
+  updateBeeswarm,
+} from "./beeswarm.js";
 import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js";
 import { applyUrlState, writeUrlState } from "./urlState.js";
 
@@ -45,6 +56,12 @@ const els = {
   chart: document.getElementById("chart"),
   chartEmpty: document.getElementById("chartEmpty"),
   chartStatus: document.getElementById("chartStatus"),
+  chartXMetricLabel: document.getElementById("chartXMetricLabel"),
+  chartYMetricLabel: document.getElementById("chartYMetricLabel"),
+  beeswarmChart: document.getElementById("beeswarmChart"),
+  beeswarmEmpty: document.getElementById("beeswarmEmpty"),
+  beeswarmTitle: document.getElementById("beeswarmTitle"),
+  beeswarmStatus: document.getElementById("beeswarmStatus"),
   selectedPlayer: document.getElementById("selectedPlayer"),
   themeSlider: document.getElementById("themeSlider"),
 };
@@ -110,6 +127,15 @@ function selectPlayer(playerId) {
   syncSelectedPlayerLabel();
   if (player) syncTableSelection(playerId);
   updateChart();
+  updateBeeswarm();
+  scheduleUrlWrite();
+}
+
+function selectBeeswarmMetric(field) {
+  if (!metricLabels[field]) return;
+  state.beeswarmMetric = field;
+  syncBeeswarmMetricHeader(field);
+  updateBeeswarm();
   scheduleUrlWrite();
 }
 
@@ -121,6 +147,7 @@ function refresh() {
   }
   updateStats();
   updateChart();
+  updateBeeswarm();
   updateTable(state.selectedPlayerId);
   scheduleUrlWrite();
 }
@@ -137,7 +164,12 @@ function syncThemeSlider() {
   const label = getThemeLabel(theme);
   els.themeSlider.value = getThemeIndex(theme);
   els.themeSlider.setAttribute("aria-valuetext", label);
-  els.themeSlider.parentElement.title = `配色主题：${label}`;
+  els.themeSlider.closest(".theme-control").title = `配色主题：${label}`;
+}
+
+function syncChartAxisSummary() {
+  els.chartXMetricLabel.textContent = metricLabels[state.xMetric];
+  els.chartYMetricLabel.textContent = metricLabels[state.yMetric];
 }
 
 function setupSelects() {
@@ -214,11 +246,13 @@ function bindEvents() {
   });
   els.xMetric.addEventListener("change", () => {
     state.xMetric = els.xMetric.value;
+    syncChartAxisSummary();
     updateChart();
     scheduleUrlWrite();
   });
   els.yMetric.addEventListener("change", () => {
     state.yMetric = els.yMetric.value;
+    syncChartAxisSummary();
     updateChart();
     scheduleUrlWrite();
   });
@@ -231,7 +265,8 @@ function bindEvents() {
     state.selectedTeam = "ALL";
     state.searchTerm = "";
     state.xMetric = "actual_salary_m";
-    state.yMetric = "average_expected_salary_m";
+    state.yMetric = "expected_minus_actual_m";
+    state.beeswarmMetric = "average_expected_salary_m";
     state.showAvatars = false;
     state.selectedPlayerId = null;
     updateTeamPicker(els);
@@ -239,18 +274,24 @@ function bindEvents() {
     els.playerSearch.value = "";
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
+    syncChartAxisSummary();
     els.avatarToggle.checked = false;
     els.selectedPlayer.textContent = "未选中球员";
+    syncBeeswarmMetricHeader(state.beeswarmMetric);
     refresh();
   });
   els.themeSlider.addEventListener("input", () => {
     setThemeByIndex(Number(els.themeSlider.value));
     syncThemeSlider();
     rebuildChart();
+    rebuildBeeswarm();
   });
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(() => resizeChart(), 120);
+    resizeTimer = window.setTimeout(() => {
+      resizeChart();
+      resizeBeeswarm();
+    }, 120);
   });
 }
 
@@ -261,6 +302,7 @@ async function init() {
   initTheme(() => {
     syncThemeSlider();
     rebuildChart();
+    rebuildBeeswarm();
   });
   syncThemeSlider();
 
@@ -273,16 +315,26 @@ async function init() {
 
   setupSelects();
   initChart(els.chart, els.chartEmpty, { onSelect: selectPlayer });
+  initBeeswarm(els.beeswarmChart, els.beeswarmEmpty, {
+    titleElement: els.beeswarmTitle,
+    statusElement: els.beeswarmStatus,
+    onSelect: selectPlayer,
+  });
   applyUrlState(els);
+  syncChartAxisSummary();
   updateTeamPicker(els);
   syncSelectedPlayerLabel();
   applyFilters();
-  const tableInstance = setupTable("#salaryTable", { onRowClick: (playerId) => selectPlayer(playerId) });
+  const tableInstance = setupTable("#salaryTable", {
+    onRowClick: (playerId) => selectPlayer(playerId),
+    onMetricSelect: selectBeeswarmMetric,
+  });
   tableInstance.on("tableBuilt", () => {
     if (state.selectedPlayerId) syncTableSelection(state.selectedPlayerId);
   });
   updateStats();
   updateChart();
+  updateBeeswarm();
   bindEvents();
   scheduleUrlWrite();
 }

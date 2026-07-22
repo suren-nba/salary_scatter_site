@@ -14,20 +14,18 @@ let chartEl = null;
 let emptyEl = null;
 let onSelect = null;
 
+function cssColor(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
 function palette() {
-  if (getTheme() === "dark") {
-    return {
-      positive: "#3fb97f",
-      negative: "#e0655c",
-      splitLine: "rgba(255, 255, 255, 0.12)",
-      markLine: "#e8e4da",
-    };
-  }
   return {
-    positive: "#176a43",
-    negative: "#d9534f",
-    splitLine: "rgba(44, 62, 80, 0.10)",
-    markLine: "#2b2b2d",
+    positive: cssColor("--positive", "#176a43"),
+    negative: cssColor("--negative", "#9d2e2a"),
+    ink: cssColor("--ink", "#2c3e50"),
+    muted: cssColor("--muted", "#6b7785"),
+    panel: cssColor("--panel", "#ffffff"),
+    line: cssColor("--line", "rgba(44, 62, 80, 0.14)"),
   };
 }
 
@@ -111,6 +109,11 @@ export function updateChart() {
     return matchesSearch || selected || smallTeamAvatar;
   });
 
+  chartEl.setAttribute(
+    "aria-label",
+    `NBA 球员薪资价值散点图，X 轴为${metricLabels[state.xMetric]}，Y 轴为${metricLabels[state.yMetric]}`,
+  );
+
   if (emptyEl) {
     emptyEl.hidden = rows.length > 0;
     if (rows.length === 0) emptyEl.textContent = "没有符合当前筛选条件的球员";
@@ -134,14 +137,17 @@ export function updateChart() {
 
   chart.setOption({
     animationDuration: 300,
-    textStyle: { fontFamily: numberFontFamily },
-    grid: { left: 64, right: 28, top: 36, bottom: 84 },
+    backgroundColor: "transparent",
+    textStyle: { color: colors.ink, fontFamily: numberFontFamily },
+    grid: { left: 20, right: 20, top: 36, bottom: 88, containLabel: true },
     tooltip: {
       trigger: "item",
-      borderWidth: 0,
+      borderWidth: 1,
+      borderColor: colors.line,
       padding: 12,
-      backgroundColor: "rgba(255, 255, 255, 0.97)",
-      extraCssText: "box-shadow:0 14px 38px rgba(43,43,45,.18);border-radius:8px;",
+      backgroundColor: colors.panel,
+      textStyle: { color: colors.ink },
+      extraCssText: "box-shadow:0 14px 38px rgba(0,0,0,.18);border-radius:8px;",
       formatter: (params) => tooltipHtml(params.data.row),
     },
     toolbox: {
@@ -149,7 +155,6 @@ export function updateChart() {
       feature: {
         dataZoom: { yAxisIndex: "none" },
         restore: {},
-        saveAsImage: { pixelRatio: 2 },
       },
     },
     dataZoom: [
@@ -157,18 +162,20 @@ export function updateChart() {
       { type: "slider", height: 24, bottom: 24 },
     ],
     xAxis: {
-      name: `${metricLabels[state.xMetric]}（百万美元）`,
       min: axisMin(state.xMetric, xValues),
       max: axisMax(xValues),
-      axisLabel: { formatter: (value) => `$${value}M` },
-      splitLine: { lineStyle: { color: colors.splitLine } },
+      axisLabel: { color: colors.muted, formatter: (value) => `$${value}M` },
+      axisLine: { lineStyle: { color: colors.line } },
+      axisTick: { lineStyle: { color: colors.line } },
+      splitLine: { lineStyle: { color: colors.line } },
     },
     yAxis: {
-      name: `${metricLabels[state.yMetric]}（百万美元）`,
       min: axisMin(state.yMetric, yValues),
       max: axisMax(yValues),
-      axisLabel: { formatter: (value) => `$${value}M` },
-      splitLine: { lineStyle: { color: colors.splitLine } },
+      axisLabel: { color: colors.muted, formatter: (value) => `$${value}M` },
+      axisLine: { lineStyle: { color: colors.line } },
+      axisTick: { lineStyle: { color: colors.line } },
+      splitLine: { lineStyle: { color: colors.line } },
     },
     series: [
       {
@@ -180,8 +187,8 @@ export function updateChart() {
         markLine: {
           silent: true,
           symbol: "none",
-          lineStyle: { type: "dashed", color: colors.markLine, opacity: 0.42 },
-          label: { formatter: "y = x", color: colors.markLine },
+          lineStyle: { type: "dashed", color: colors.ink, opacity: 0.42 },
+          label: { formatter: "y = x", color: colors.ink },
           data: [[{ coord: [minLine, minLine] }, { coord: [maxLine, maxLine] }]],
         },
       },

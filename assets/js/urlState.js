@@ -27,6 +27,11 @@ export function applyUrlState(els) {
     els.yMetric.value = y;
   }
 
+  const beeswarm = params.get("beeswarm");
+  if (beeswarm && metricLabels[beeswarm]) {
+    state.beeswarmMetric = beeswarm;
+  }
+
   if (params.get("avatars") === "1") {
     state.showAvatars = true;
     els.avatarToggle.checked = true;
@@ -44,7 +49,8 @@ export function writeUrlState() {
   const term = state.searchTerm.trim();
   if (term) params.set("q", term);
   if (state.xMetric !== "actual_salary_m") params.set("x", state.xMetric);
-  if (state.yMetric !== "average_expected_salary_m") params.set("y", state.yMetric);
+  if (state.yMetric !== "expected_minus_actual_m") params.set("y", state.yMetric);
+  if (state.beeswarmMetric !== "average_expected_salary_m") params.set("beeswarm", state.beeswarmMetric);
   if (state.showAvatars) params.set("avatars", "1");
   if (state.selectedPlayerId) params.set("sel", String(state.selectedPlayerId));
 

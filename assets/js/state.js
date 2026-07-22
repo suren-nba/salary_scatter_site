@@ -7,7 +7,8 @@ export const state = {
   selectedTeam: "ALL",
   searchTerm: "",
   xMetric: "actual_salary_m",
-  yMetric: "average_expected_salary_m",
+  yMetric: "expected_minus_actual_m",
+  beeswarmMetric: "average_expected_salary_m",
   showAvatars: false,
   selectedPlayerId: null,
 };

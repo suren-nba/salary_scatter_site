@@ -2,6 +2,14 @@ import { state } from "./state.js";
 import { escapeHtml, formatMoney, formatSurplusHtml } from "./format.js";
 
 let table = null;
+const metricFields = new Set([
+  "epm_expected_salary_m",
+  "darko_expected_salary_m",
+  "average_expected_salary_m",
+  "last_season_value_salary_m",
+  "actual_salary_m",
+  "expected_minus_actual_m",
+]);
 
 function tableColumns() {
   const moneyFormatter = (cell) => `<span class="numeric-value">${formatMoney(cell.getValue())}</span>`;
@@ -33,14 +41,14 @@ function tableColumns() {
   ];
 }
 
-export function setupTable(selector, { onRowClick } = {}) {
+export function setupTable(selector, { onRowClick, onMetricSelect } = {}) {
   table = new Tabulator(selector, {
     data: state.filtered,
     index: "player_id",
     layout: "fitDataStretch",
     columnDefaults: { vertAlign: "middle" },
     height: "min(620px, 75vh)",
-    responsiveLayout: "hide",
+    responsiveLayout: false,
     pagination: true,
     paginationSize: 25,
     paginationSizeSelector: [10, 20, 25, 50, 100],
@@ -72,12 +80,35 @@ export function setupTable(selector, { onRowClick } = {}) {
     if (onRowClick) onRowClick(row.getData().player_id);
   });
 
+  table.on("headerClick", (_event, column) => {
+    const field = column.getField();
+    if (metricFields.has(field) && onMetricSelect) onMetricSelect(field);
+  });
+
+  table.on("tableBuilt", () => syncBeeswarmMetricHeader(state.beeswarmMetric));
+
   return table;
+}
+
+export function syncBeeswarmMetricHeader(field) {
+  if (!table) return;
+  table.getColumns().forEach((column) => {
+    const element = column.getElement();
+    const isMetric = metricFields.has(column.getField());
+    const isSelected = column.getField() === field;
+    element.classList.toggle("beeswarm-metric-column", isMetric);
+    element.classList.toggle("beeswarm-metric-selected", isSelected);
+    if (isMetric) {
+      element.setAttribute("aria-pressed", String(isSelected));
+      element.title = isSelected ? "当前蜂群分布指标" : "点击切换蜂群分布指标";
+    }
+  });
 }
 
 export function updateTable(selectedPlayerId) {
   if (!table) return;
   table.setData(state.filtered).then(() => {
+    syncBeeswarmMetricHeader(state.beeswarmMetric);
     if (selectedPlayerId) {
       syncTableSelection(selectedPlayerId);
     }

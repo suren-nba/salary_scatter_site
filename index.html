@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NBA 球员薪资价值</title>
-    <meta name="description" content="比较 EPM、DARKO、实际薪资与模型平均估值的 NBA 球员薪资价值可视化。">
+    <title>NBA 球员薪资价值评估</title>
+    <meta name="description" content="NBA 球员薪资价值评估与可视化。">
     <link rel="icon" href="./assets/brand/sr-logo.png">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
     <link rel="stylesheet" href="./assets/css/style.css">
@@ -16,14 +16,18 @@
           <img src="./assets/brand/sr-logo.png" alt="SR Logo">
         </a>
         <div class="title-block">
-          <h1>NBA 球员薪资价值</h1>
-          <p>比较 EPM、DARKO、实际薪资与模型平均估值</p>
+          <h1>NBA 球员薪资价值评估</h1>
         </div>
         <div class="topbar__meta">
           <span class="source-credit">数据来自微博-<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
-          <label class="theme-slider" title="配色主题：浅色">
-            <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="浅色">
-          </label>
+          <div class="theme-control" title="配色主题：米白色">
+            <span class="theme-control__label">配色</span>
+            <label class="theme-slider">
+              <span class="theme-slider__endpoint theme-slider__endpoint--light" aria-hidden="true"></span>
+              <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="米白色">
+              <span class="theme-slider__endpoint theme-slider__endpoint--dark" aria-hidden="true"></span>
+            </label>
+          </div>
           <a href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer">返回主站</a>
         </div>
       </div>
@@ -60,7 +64,7 @@
           <span>平均预期薪资</span>
           <strong id="statExpected">—</strong>
         </article>
-        <article class="stat stat--emphasis">
+        <article class="stat">
           <span>平均合同价值差</span>
           <strong id="statSurplus">—</strong>
         </article>
@@ -101,7 +105,12 @@
         <div class="section-heading">
           <div>
             <h2>薪资价值散点图</h2>
-            <p id="chartHelp">位于 y = x 参考线上方：Y 轴指标高于 X 轴指标；下方则相反。</p>
+            <p id="chartHelp">合同价值差正面显示为绿色，反之红色。</p>
+            <p class="chart-axis-summary" aria-live="polite">
+              X 轴：<strong id="chartXMetricLabel">实际薪资</strong>
+              <span aria-hidden="true">｜</span>
+              Y 轴：<strong id="chartYMetricLabel">合同价值差</strong>
+            </p>
           </div>
           <span id="chartStatus" class="status-pill">—</span>
         </div>
@@ -110,16 +119,31 @@
         </div>
       </section>
 
-      <section class="table-section">
-        <div class="section-heading">
-          <div>
-            <h2>球员薪资数据表</h2>
-            <p>表格与散点图联动，点击球员可快速定位。</p>
+      <div class="analysis-grid">
+        <section class="table-section">
+          <div class="section-heading">
+            <div>
+              <h2>球员薪资数据表</h2>
+              <p>点击球员可联动定位；点击薪资指标列标题可切换右侧分布。</p>
+            </div>
+            <span id="selectedPlayer" class="status-pill">未选中球员</span>
           </div>
-          <span id="selectedPlayer" class="status-pill">未选中球员</span>
-        </div>
-        <div id="salaryTable"></div>
-      </section>
+          <div id="salaryTable"></div>
+        </section>
+
+        <section class="beeswarm-section" aria-labelledby="beeswarmTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="beeswarmTitle">平均预期薪资分布</h2>
+              <p>纵轴为真实数值，横向仅用于分散重叠球员。</p>
+            </div>
+            <span id="beeswarmStatus" class="status-pill">—</span>
+          </div>
+          <div id="beeswarmChart" class="beeswarm-chart" role="img" aria-label="平均预期薪资蜂群分布图">
+            <div id="beeswarmEmpty" class="chart-empty">数据加载中…</div>
+          </div>
+        </section>
+      </div>
 
       <section class="notes">
         <h2>指标说明</h2>
