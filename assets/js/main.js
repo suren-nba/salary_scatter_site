@@ -147,11 +147,19 @@ function refresh() {
 async function shareCurrentView() {
   const shareUrl = createShareUrl();
   window.clearTimeout(els.shareViewBtn._resetTimer);
-  try {
-    await navigator.clipboard.writeText(shareUrl);
-    els.shareViewBtn.textContent = "链接已复制";
-  } catch {
-    els.shareViewBtn.textContent = "链接已生成";
+  els.shareViewBtn.textContent = "链接已生成";
+  if (navigator.clipboard?.writeText) {
+    try {
+      await Promise.race([
+        navigator.clipboard.writeText(shareUrl),
+        new Promise((_, reject) => {
+          window.setTimeout(() => reject(new Error("Clipboard timeout")), 700);
+        }),
+      ]);
+      els.shareViewBtn.textContent = "链接已复制";
+    } catch {
+      // The address bar still contains the generated share URL.
+    }
   }
   els.shareViewBtn._resetTimer = window.setTimeout(() => {
     els.shareViewBtn.textContent = "分享视图";
