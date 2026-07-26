@@ -4,10 +4,13 @@ import {
   average,
   formatMoney,
   formatSurplusHtml,
+  isDifferenceMetric,
   teamLogoPath,
   ordinal,
-} from "./format.js?v=20260722-4";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260722-4";
+  teamDisplayName,
+  teamHasLogo,
+} from "./format.js?v=20260727-8";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260727-8";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -15,24 +18,31 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260722-4";
-import { initChart, rebuildChart, resizeChart, updateChart } from "./chart.js?v=20260722-4";
+} from "./teamPicker.js?v=20260727-8";
+import {
+  initChart,
+  rebuildChart,
+  resizeChart,
+  updateChart,
+  createChartShareBlob,
+  getChartShareTitle,
+} from "./chart.js?v=20260727-8";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js?v=20260722-4";
+} from "./table.js?v=20260727-8";
 import {
   initBeeswarm,
   rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260722-4";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260722-4";
-import { applyUrlState, writeUrlState } from "./urlState.js?v=20260722-4";
+} from "./beeswarm.js?v=20260727-8";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260727-8";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260727-8";
 
-const DEPLOY_VERSION = "20260722-4";
+const DEPLOY_VERSION = "20260727-8";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -45,21 +55,27 @@ const els = {
   statActual: document.getElementById("statActual"),
   statExpected: document.getElementById("statExpected"),
   statSurplus: document.getElementById("statSurplus"),
+  statXMetricLabel: document.getElementById("statXMetricLabel"),
+  statYMetricLabel: document.getElementById("statYMetricLabel"),
+  statMetricLabel: document.getElementById("statMetricLabel"),
   teamPicker: document.getElementById("teamPicker"),
   teamFilterButton: document.getElementById("teamFilterButton"),
   teamFilterLogo: document.getElementById("teamFilterLogo"),
   teamFilterLabel: document.getElementById("teamFilterLabel"),
   teamFilterMenu: document.getElementById("teamFilterMenu"),
-  playerSearch: document.getElementById("playerSearch"),
+  positionFilter: document.getElementById("positionFilter"),
   xMetric: document.getElementById("xMetric"),
   yMetric: document.getElementById("yMetric"),
   avatarToggle: document.getElementById("avatarToggle"),
   resetBtn: document.getElementById("resetBtn"),
   chart: document.getElementById("chart"),
   chartEmpty: document.getElementById("chartEmpty"),
-  chartStatus: document.getElementById("chartStatus"),
   chartXMetricLabel: document.getElementById("chartXMetricLabel"),
   chartYMetricLabel: document.getElementById("chartYMetricLabel"),
+  chartShare: document.getElementById("chartShare"),
+  chartShareButton: document.getElementById("chartShareButton"),
+  chartShareMenu: document.getElementById("chartShareMenu"),
+  chartShareFeedback: document.getElementById("chartShareFeedback"),
   beeswarmChart: document.getElementById("beeswarmChart"),
   beeswarmEmpty: document.getElementById("beeswarmEmpty"),
   beeswarmTitle: document.getElementById("beeswarmTitle"),
@@ -70,6 +86,8 @@ const els = {
 
 let resizeTimer;
 let urlTimer;
+let shareBlob = null;
+let sharePrepareToken = 0;
 
 function scheduleUrlWrite() {
   window.clearTimeout(urlTimer);
@@ -77,30 +95,45 @@ function scheduleUrlWrite() {
 }
 
 function teamRankHtml(field) {
-  if (state.searchTerm.trim()) return "";
   const rank = teamRank(field, state.selectedTeam);
   if (!rank) return "";
-  return `<span class="team-rank" title="30 支球队中按平均值从高到低排名">${ordinal(rank)}</span>`;
+  const greenPercent = ((30 - rank) / 29) * 100;
+  return `<span class="team-rank" style="--rank-color:color-mix(in srgb,var(--positive) ${greenPercent.toFixed(1)}%,var(--negative))" title="30 支球队中按平均值从高到低排名">${ordinal(rank)}</span>`;
 }
 
 function updatePlayerStat(player, headshot, name) {
-  headshot.hidden = !player;
-  name.textContent = player ? player.player_name : "—";
-  if (player) {
+  headshot.hidden = !player?.headshot_file;
+  name.textContent = player ? player.player_name : "--";
+  if (player?.headshot_file) {
     headshot.src = player.headshot_file;
     headshot.alt = player.player_name;
+  } else {
+    headshot.removeAttribute("src");
+    headshot.alt = "";
   }
+}
+
+function metricAverageHtml(rows, field) {
+  const value = average(rows, field);
+  return `${
+    isDifferenceMetric(field)
+      ? formatSurplusHtml(value)
+      : `<span class="numeric-value">${formatMoney(value)}</span>`
+  }${teamRankHtml(field)}`;
 }
 
 function updateStats() {
   const rows = state.filtered;
   const teamRows = teamScopeRows();
-  const isAllTeams = state.selectedTeam === "ALL";
-  els.statTeamLogo.hidden = isAllTeams;
-  els.statTeamLabel.textContent = isAllTeams ? "全部球队" : state.selectedTeam;
-  if (!isAllTeams) {
+  const hasTeamLogo = teamHasLogo(state.selectedTeam);
+  els.statTeamLogo.hidden = !hasTeamLogo;
+  els.statTeamLabel.textContent = teamDisplayName(state.selectedTeam);
+  if (hasTeamLogo) {
     els.statTeamLogo.src = teamLogoPath(state.selectedTeam);
     els.statTeamLogo.alt = `${state.selectedTeam} 队徽`;
+  } else {
+    els.statTeamLogo.removeAttribute("src");
+    els.statTeamLogo.alt = "";
   }
   updatePlayerStat(
     extremePlayer(teamRows, "max"),
@@ -112,37 +145,138 @@ function updateStats() {
     els.statMostOverpaidHeadshot,
     els.statMostOverpaidName,
   );
-  els.statActual.innerHTML = `<span class="numeric-value">${formatMoney(average(rows, "actual_salary_m"))}</span>${teamRankHtml("actual_salary_m")}`;
-  els.statExpected.innerHTML = `<span class="numeric-value">${formatMoney(average(rows, "average_expected_salary_m"))}</span>${teamRankHtml("average_expected_salary_m")}`;
-  els.statSurplus.innerHTML = `${formatSurplusHtml(average(rows, "expected_minus_actual_m"))}${teamRankHtml("expected_minus_actual_m")}`;
-  els.chartStatus.textContent = `${rows.length} 名球员`;
+  els.statXMetricLabel.textContent = `X轴指标 · ${metricLabels[state.xMetric]}`;
+  els.statYMetricLabel.textContent = `Y轴指标 · ${metricLabels[state.yMetric]}`;
+  els.statActual.innerHTML = metricAverageHtml(rows, state.xMetric);
+  els.statExpected.innerHTML = metricAverageHtml(rows, state.yMetric);
+  const activeMetric = state.beeswarmMetric;
+  els.statMetricLabel.textContent = `表格列指标 · ${metricLabels[activeMetric]}`;
+  els.statSurplus.innerHTML = metricAverageHtml(rows, activeMetric);
+}
+
+function setShareActionsDisabled(disabled) {
+  els.chartShareMenu.querySelectorAll("[data-share-action]").forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+function setShareMenuOpen(open) {
+  els.chartShareButton.setAttribute("aria-expanded", String(open));
+  els.chartShareMenu.hidden = !open;
+  if (!open) return;
+  shareBlob = null;
+  const token = ++sharePrepareToken;
+  setShareActionsDisabled(true);
+  els.chartShareFeedback.textContent = "正在准备图片…";
+  createChartShareBlob()
+    .then((blob) => {
+      if (token !== sharePrepareToken) return;
+      shareBlob = blob;
+      setShareActionsDisabled(false);
+      els.chartShareFeedback.textContent = "图片已准备";
+    })
+    .catch(() => {
+      if (token !== sharePrepareToken) return;
+      els.chartShareFeedback.textContent = "图片生成失败，请重试";
+    });
+}
+
+function shareFile() {
+  return new File([shareBlob], "salary-scatter.png", { type: "image/png" });
+}
+
+async function copyShareImage() {
+  if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+    throw new Error("当前浏览器不支持复制图片，请使用下载本地");
+  }
+  await navigator.clipboard.write([
+    new ClipboardItem({ "image/png": shareBlob }),
+  ]);
+}
+
+async function runShareAction(action) {
+  if (!shareBlob) return;
+  if (action === "download") {
+    const url = URL.createObjectURL(shareBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "salary-scatter.png";
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    els.chartShareFeedback.textContent = "图片已下载";
+    return;
+  }
+  if (action === "copy") {
+    await copyShareImage();
+    els.chartShareFeedback.textContent = "图片已复制，可直接粘贴";
+    return;
+  }
+  if (action === "social") {
+    const file = shareFile();
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      try {
+        await navigator.share({
+          title: getChartShareTitle(),
+          text: "数据by库昊&via salary.surennba.com",
+          files: [file],
+        });
+        els.chartShareFeedback.textContent = "分享已完成";
+      } catch (error) {
+        if (error?.name !== "AbortError") throw error;
+        els.chartShareFeedback.textContent = "已取消分享";
+      }
+      return;
+    }
+    await copyShareImage();
+    els.chartShareFeedback.textContent = "设备不支持系统分享，图片已复制";
+  }
 }
 
 function syncSelectedPlayerLabel() {
   const player = state.data.find((row) => row.player_id === state.selectedPlayerId);
-  els.selectedPlayer.textContent = player ? `${player.player_name} · ${player.team_abbreviation}` : "未选中球员";
+  els.selectedPlayer.textContent = player
+    ? `${player.player_name} · ${teamDisplayName(player.team_abbreviation)} · ${player.position}`
+    : "未选中球员";
 }
 
 function selectPlayer(playerId) {
   const player = state.data.find((row) => row.player_id === playerId);
   state.selectedPlayerId = player ? playerId : null;
+  state.hoveredPlayerId = null;
   syncSelectedPlayerLabel();
-  if (player) syncTableSelection(playerId);
+  syncTableSelection(state.selectedPlayerId);
   updateChart();
   updateBeeswarm();
   scheduleUrlWrite();
+}
+
+function hoverPlayer(playerId) {
+  const player = state.filtered.find((row) => row.player_id === playerId);
+  state.hoveredPlayerId = player ? playerId : null;
+  updateBeeswarm();
 }
 
 function selectBeeswarmMetric(field) {
   if (!metricLabels[field]) return;
   state.beeswarmMetric = field;
   syncBeeswarmMetricHeader(field);
+  updateStats();
   updateBeeswarm();
   scheduleUrlWrite();
 }
 
+function setTableVisiblePlayers(playerIds) {
+  state.tableVisiblePlayerIds = playerIds;
+  if (state.hoveredPlayerId && !playerIds.includes(state.hoveredPlayerId)) {
+    state.hoveredPlayerId = null;
+  }
+  updateBeeswarm();
+}
+
 function refresh() {
   applyFilters();
+  state.tableVisiblePlayerIds = null;
+  state.hoveredPlayerId = null;
   if (state.selectedPlayerId && !state.filtered.some((row) => row.player_id === state.selectedPlayerId)) {
     state.selectedPlayerId = null;
     els.selectedPlayer.textContent = "未选中球员";
@@ -155,7 +289,15 @@ function refresh() {
 }
 
 function chooseTeam(team) {
+  const enteringNoTeam = team === "NA" && state.selectedTeam !== "NA";
   state.selectedTeam = team;
+  if (enteringNoTeam) {
+    state.xMetric = "last_season_actual_salary_m";
+    state.yMetric = "last_season_expected_minus_actual_m";
+    els.xMetric.value = state.xMetric;
+    els.yMetric.value = state.yMetric;
+    syncChartAxisSummary();
+  }
   updateTeamPicker(els);
   setTeamPickerOpen(els, false);
   refresh();
@@ -187,6 +329,19 @@ function setupSelects() {
 }
 
 function bindEvents() {
+  els.chartShareButton.addEventListener("click", () => {
+    setShareMenuOpen(els.chartShareButton.getAttribute("aria-expanded") !== "true");
+  });
+  els.chartShareMenu.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-share-action]");
+    if (!actionButton || actionButton.disabled) return;
+    setShareActionsDisabled(true);
+    runShareAction(actionButton.dataset.shareAction)
+      .catch((error) => {
+        els.chartShareFeedback.textContent = error.message || "操作失败，请重试";
+      })
+      .finally(() => setShareActionsDisabled(false));
+  });
   els.teamFilterButton.addEventListener("click", () => {
     setTeamPickerOpen(els, els.teamFilterButton.getAttribute("aria-expanded") !== "true");
   });
@@ -233,28 +388,34 @@ function bindEvents() {
   });
   document.addEventListener("click", (event) => {
     if (!els.teamPicker.contains(event.target)) setTeamPickerOpen(els, false);
+    if (!els.chartShare.contains(event.target)) setShareMenuOpen(false);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || els.teamFilterButton.getAttribute("aria-expanded") !== "true") return;
-    setTeamPickerOpen(els, false);
-    els.teamFilterButton.focus();
+    if (event.key !== "Escape") return;
+    if (els.teamFilterButton.getAttribute("aria-expanded") === "true") {
+      setTeamPickerOpen(els, false);
+      els.teamFilterButton.focus();
+    }
+    if (els.chartShareButton.getAttribute("aria-expanded") === "true") {
+      setShareMenuOpen(false);
+      els.chartShareButton.focus();
+    }
   });
-  els.playerSearch.addEventListener("input", () => {
-    window.clearTimeout(els.playerSearch._timer);
-    els.playerSearch._timer = window.setTimeout(() => {
-      state.searchTerm = els.playerSearch.value;
-      refresh();
-    }, 140);
+  els.positionFilter.addEventListener("change", () => {
+    state.selectedPosition = els.positionFilter.value;
+    refresh();
   });
   els.xMetric.addEventListener("change", () => {
     state.xMetric = els.xMetric.value;
     syncChartAxisSummary();
+    updateStats();
     updateChart();
     scheduleUrlWrite();
   });
   els.yMetric.addEventListener("change", () => {
     state.yMetric = els.yMetric.value;
     syncChartAxisSummary();
+    updateStats();
     updateChart();
     scheduleUrlWrite();
   });
@@ -265,15 +426,17 @@ function bindEvents() {
   });
   els.resetBtn.addEventListener("click", () => {
     state.selectedTeam = "ALL";
-    state.searchTerm = "";
+    state.selectedPosition = "ALL";
     state.xMetric = "actual_salary_m";
     state.yMetric = "expected_minus_actual_m";
     state.beeswarmMetric = "average_expected_salary_m";
     state.showAvatars = false;
     state.selectedPlayerId = null;
+    state.hoveredPlayerId = null;
+    state.tableVisiblePlayerIds = null;
     updateTeamPicker(els);
     setTeamPickerOpen(els, false);
-    els.playerSearch.value = "";
+    els.positionFilter.value = state.selectedPosition;
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
     syncChartAxisSummary();
@@ -337,7 +500,9 @@ async function init() {
   applyFilters();
   const tableInstance = setupTable("#salaryTable", {
     onRowClick: (playerId) => selectPlayer(playerId),
+    onRowHover: hoverPlayer,
     onMetricSelect: selectBeeswarmMetric,
+    onVisibleRowsChange: setTableVisiblePlayers,
   });
   tableInstance.on("tableBuilt", () => {
     if (state.selectedPlayerId) syncTableSelection(state.selectedPlayerId);
@@ -352,7 +517,6 @@ async function init() {
 init().catch((error) => {
   console.error(error);
   const message = "数据加载失败，请检查网络连接或稍后刷新。";
-  els.chartStatus.textContent = "加载失败";
   els.chartEmpty.textContent = message;
   els.chartEmpty.hidden = false;
   els.beeswarmStatus.textContent = "加载失败";

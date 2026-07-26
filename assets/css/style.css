@@ -304,7 +304,7 @@ main {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -322,7 +322,7 @@ main {
 
 .stat {
   padding: 16px;
-  min-height: 92px;
+  min-height: 106px;
 }
 
 .stat > span {
@@ -384,11 +384,31 @@ main {
 }
 
 .team-rank {
-  margin-left: 8px;
-  color: var(--muted);
-  font-size: 0.52em;
-  font-weight: 600;
-  vertical-align: 0.2em;
+  margin-left: 0;
+  color: var(--rank-color, var(--muted));
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stat strong.stat-metric-value {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+  overflow-wrap: normal;
+}
+
+.stat-metric-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-metric-value .numeric-value,
+.stat-metric-value .surplus-value {
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -407,15 +427,15 @@ main {
 }
 
 .team-filter-control {
-  flex: 1 1 180px;
+  flex: 1.25 1 220px;
 }
 
-.search-control {
-  flex: 1.6 1 220px;
+.position-control {
+  flex: 0.65 1 120px;
 }
 
-.controls label:not(.toggle-control):not(.search-control) {
-  flex: 1 1 160px;
+.controls label:not(.toggle-control):not(.position-control) {
+  flex: 1.1 1 180px;
 }
 
 .toggle-control {
@@ -504,7 +524,7 @@ main {
   width: max-content;
   min-width: 280px;
   max-width: min(420px, calc(100vw - 32px));
-  max-height: 360px;
+  max-height: min(70vh, 680px);
   display: grid;
   grid-template-columns: repeat(2, minmax(124px, 1fr));
   gap: 4px;
@@ -541,9 +561,8 @@ main {
   background: var(--control-highlight);
 }
 
-.team-picker__option--all {
-  grid-column: 1 / -1;
-  padding-left: 12px;
+.team-picker__option--no-logo {
+  padding-left: 9px;
 }
 
 .team-picker__option span:last-child {
@@ -680,6 +699,79 @@ main {
   font-size: 13px;
 }
 
+.chart-share {
+  position: relative;
+  z-index: 12;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.chart-share__button {
+  min-width: 76px;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--dark) 78%, var(--action-ink));
+  border-radius: 999px;
+  padding: 7px 18px;
+  background: var(--dark);
+  color: var(--action-ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.chart-share__button:hover,
+.chart-share__button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--dark) 84%, var(--action-ink));
+}
+
+.chart-share__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 176px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px;
+  background: var(--panel);
+  box-shadow: 0 16px 36px rgba(43, 43, 45, 0.2);
+}
+
+.chart-share__menu[hidden] {
+  display: none;
+}
+
+.chart-share__menu button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chart-share__menu button:hover:not(:disabled),
+.chart-share__menu button:focus-visible {
+  background: var(--control-highlight);
+}
+
+.chart-share__menu button:disabled {
+  cursor: wait;
+  opacity: 0.48;
+}
+
+.chart-share__feedback {
+  min-height: 18px;
+  padding: 2px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .chart {
   position: relative;
   width: 100%;
@@ -754,8 +846,7 @@ main {
 .numeric-value,
 #statActual,
 #statExpected,
-#statSurplus,
-#chartStatus {
+#statSurplus {
   font-family: var(--number-font);
   font-variant-numeric: tabular-nums;
 }
@@ -850,6 +941,10 @@ main {
   background: var(--panel);
 }
 
+.tabulator .tabulator-row:hover {
+  background: color-mix(in srgb, var(--panel) 86%, var(--dark) 14%) !important;
+}
+
 .tabulator .tabulator-row.tabulator-selected {
   background: var(--table-selected-bg) !important;
   color: var(--ink) !important;
@@ -921,8 +1016,18 @@ main {
   color: var(--muted);
 }
 
+.notes article a {
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
 .wide-note {
   grid-column: span 2;
+}
+
+.note-full {
+  grid-column: 1 / -1;
 }
 
 .methodology-link {
@@ -932,6 +1037,10 @@ main {
 
 .methodology-link a {
   color: var(--dark);
+}
+
+:root[data-theme="dark"] .methodology-link a {
+  color: #ffffff;
 }
 
 footer {
@@ -950,8 +1059,8 @@ footer a {
 }
 
 @media (max-width: 1200px) {
-  .summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .stat strong {
+    font-size: 24px;
   }
 }
 
@@ -979,12 +1088,16 @@ footer a {
   }
 
   .topbar__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 12px;
   }
 
   .brand img {
-    width: 82px;
+    width: clamp(58px, 18vw, 82px);
+  }
+
+  .topbar__meta {
+    grid-column: 1 / -1;
   }
 
   .topbar__meta {
@@ -992,8 +1105,8 @@ footer a {
   }
 
   .title-block h1 {
-    font-size: 28px;
-    white-space: normal;
+    font-size: clamp(19px, 5.8vw, 28px);
+    white-space: nowrap;
   }
 
   .summary-grid {
@@ -1007,19 +1120,20 @@ footer a {
   .team-picker__menu {
     width: 100%;
     min-width: 100%;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .team-picker__option--all {
-    grid-column: auto;
-  }
-
-  .wide-note {
+  .wide-note,
+  .note-full {
     grid-column: span 1;
   }
 
   .section-heading {
     flex-direction: column;
+  }
+
+  .chart-share {
+    align-self: flex-end;
   }
 
   .stat strong {
@@ -1035,16 +1149,16 @@ footer a {
 @media (max-width: 480px) {
   .topbar__meta {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     width: 100%;
   }
 
   .source-credit {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .theme-control {
-    justify-self: start;
+    justify-self: end;
   }
 
   .topbar__meta > a {
@@ -1056,8 +1170,8 @@ footer a {
   }
 
   .team-filter-control,
-  .search-control,
-  .controls label:not(.toggle-control):not(.search-control),
+  .position-control,
+  .controls label:not(.toggle-control):not(.position-control),
   .toggle-control,
   .controls .reset-button {
     flex: 1 1 100%;

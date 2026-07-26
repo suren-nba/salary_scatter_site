@@ -1,5 +1,9 @@
-import { state } from "./state.js?v=20260722-4";
-import { teamLogoPath } from "./format.js?v=20260722-4";
+import { state } from "./state.js?v=20260727-8";
+import {
+  teamDisplayName,
+  teamHasLogo,
+  teamLogoPath,
+} from "./format.js?v=20260727-8";
 
 function optionId(team) {
   return `team-option-${team === "ALL" ? "all" : team}`;
@@ -46,12 +50,15 @@ export function getActiveOption(els) {
 }
 
 export function updateTeamPicker(els) {
-  const isAll = state.selectedTeam === "ALL";
-  els.teamFilterLogo.hidden = isAll;
-  els.teamFilterLabel.textContent = isAll ? "全部球队" : state.selectedTeam;
-  if (!isAll) {
+  const hasLogo = teamHasLogo(state.selectedTeam);
+  els.teamFilterLogo.hidden = !hasLogo;
+  els.teamFilterLabel.textContent = teamDisplayName(state.selectedTeam);
+  if (hasLogo) {
     els.teamFilterLogo.src = teamLogoPath(state.selectedTeam);
     els.teamFilterLogo.alt = `${state.selectedTeam} 队徽`;
+  } else {
+    els.teamFilterLogo.removeAttribute("src");
+    els.teamFilterLogo.alt = "";
   }
   els.teamFilterMenu.querySelectorAll(".team-picker__option").forEach((option) => {
     option.setAttribute("aria-selected", String(option.dataset.team === state.selectedTeam));
@@ -67,25 +74,27 @@ function makeTeamOption(team) {
   option.setAttribute("role", "option");
   option.setAttribute("aria-selected", "false");
 
-  if (team === "ALL") {
-    option.classList.add("team-picker__option--all");
-  } else {
+  if (teamHasLogo(team)) {
     const logo = document.createElement("img");
     logo.src = teamLogoPath(team);
     logo.alt = "";
     logo.loading = "lazy";
     option.appendChild(logo);
+  } else {
+    option.classList.add("team-picker__option--no-logo");
   }
 
   const label = document.createElement("span");
-  label.textContent = team === "ALL" ? "全部球队" : team;
+  label.textContent = teamDisplayName(team);
   option.appendChild(label);
   return option;
 }
 
 export function setupTeamPicker(els) {
   els.teamFilterMenu.appendChild(makeTeamOption("ALL"));
-  const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))].sort();
+  const availableTeams = new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean));
+  if (availableTeams.has("NA")) els.teamFilterMenu.appendChild(makeTeamOption("NA"));
+  const teams = [...availableTeams].filter((team) => team !== "NA").sort();
   teams.forEach((team) => els.teamFilterMenu.appendChild(makeTeamOption(team)));
   updateTeamPicker(els);
 }

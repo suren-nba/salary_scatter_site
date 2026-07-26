@@ -24,6 +24,8 @@ SALARY_FIELDS = [
     "darko_expected_salary_m",
     "average_expected_salary_m",
     "last_season_value_salary_m",
+    "last_season_actual_salary_m",
+    "last_season_expected_minus_actual_m",
     "actual_salary_m",
     "expected_minus_actual_m",
 ]
@@ -33,6 +35,7 @@ WEB_FIELDS = [
     "player_name",
     "team_name",
     "team_abbreviation",
+    "position",
     *SALARY_FIELDS,
     "headshot_file",
 ]
@@ -51,7 +54,9 @@ def valid_record(row: dict) -> bool:
         return False
     if row.get("player_id") in (None, ""):
         return False
-    if not str(row.get("player_id")).isdigit():
+    try:
+        int(str(row.get("player_id")).strip())
+    except ValueError:
         return False
     if not row.get("player_name"):
         return False
@@ -123,18 +128,9 @@ def main() -> None:
         elif conversion["status"] not in SUCCESS_STATUSES:
             reason = "headshot_conversion_failed"
 
-        if reason:
-            excluded.append({
-                "player_id": player_id,
-                "player_name": row.get("player_name", ""),
-                "team_abbreviation": row.get("team_abbreviation", ""),
-                "reason": reason,
-            })
-            continue
-
         cleaned = {field: row.get(field) for field in WEB_FIELDS}
         cleaned["player_id"] = int(player_id)
-        cleaned["headshot_file"] = f"assets/headshots/{player_id}.webp"
+        cleaned["headshot_file"] = None if reason else f"assets/headshots/{player_id}.webp"
         for field in SALARY_FIELDS:
             value = cleaned.get(field)
             cleaned[field] = None if value is None else round(float(value), 1)
@@ -155,9 +151,12 @@ def main() -> None:
         "player_count": len(final_rows),
         "original_player_count": len(data),
         "excluded_player_count": len(excluded),
+        "missing_headshot_count": sum(row["headshot_file"] is None for row in final_rows),
         "salary_unit": "million_usd",
-        "expected_minus_actual_label": "合同价值差",
+        "expected_minus_actual_label": "新赛季合同价值差",
         "expected_minus_actual_definition": "average_expected_salary_m - actual_salary_m",
+        "last_season_expected_minus_actual_label": "上赛季合同价值差",
+        "last_season_expected_minus_actual_definition": "last_season_value_salary_m - last_season_actual_salary_m",
         "headshot_format": "webp",
         "headshot_source_dir": str(SOURCE_HEADSHOTS),
         "headshot_webp_dir": str(WEBP_HEADSHOTS),

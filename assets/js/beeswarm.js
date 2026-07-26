@@ -1,12 +1,14 @@
-import { state } from "./state.js?v=20260722-4";
+import { state } from "./state.js?v=20260727-8";
 import {
   escapeHtml,
   formatMoney,
   isNumber,
+  isDifferenceMetric,
   metricLabels,
   numberFontFamily,
-} from "./format.js?v=20260722-4";
-import { getTheme } from "./theme.js?v=20260722-4";
+  teamDisplayName,
+} from "./format.js?v=20260727-8";
+import { getTheme } from "./theme.js?v=20260727-8";
 
 let chart = null;
 let chartEl = null;
@@ -131,15 +133,19 @@ function leagueRank(row) {
 
 function tooltipHtml(row) {
   const field = state.beeswarmMetric;
-  const signed = field === "expected_minus_actual_m";
+  const signed = isDifferenceMetric(field);
   const ranking = leagueRank(row);
+  const team = teamDisplayName(row.team_abbreviation);
+  const avatar = row.headshot_file
+    ? `<img class="avatar" src="${escapeHtml(row.headshot_file)}" alt="${escapeHtml(row.player_name)}" loading="lazy" onerror="this.style.display='none'">`
+    : "";
   return `
     <div class="chart-tooltip beeswarm-tooltip">
       <div class="chart-tooltip__top">
-        <img class="avatar" src="${escapeHtml(row.headshot_file)}" alt="${escapeHtml(row.player_name)}" loading="lazy" onerror="this.style.display='none'">
+        ${avatar}
         <div>
           <h3>${escapeHtml(row.player_name)}</h3>
-          <p>${escapeHtml(row.team_abbreviation)} · ${escapeHtml(row.team_name)}</p>
+          <p>${escapeHtml(team)} · ${escapeHtml(row.position)}</p>
         </div>
       </div>
       <div class="tooltip-metrics">
@@ -164,6 +170,9 @@ export function initBeeswarm(el, emptyElement, {
   if (emptyEl && !chartEl.contains(emptyEl)) chartEl.appendChild(emptyEl);
   chart.on("click", (params) => {
     if (params.data?.row && onSelect) onSelect(params.data.row.player_id);
+  });
+  chart.getZr().on("click", (event) => {
+    if (!event.target && onSelect) onSelect(null);
   });
   return chart;
 }
@@ -191,7 +200,7 @@ export function updateBeeswarm() {
   const rows = metricRows();
   const field = state.beeswarmMetric;
   const label = metricLabels[field];
-  const signed = field === "expected_minus_actual_m";
+  const signed = isDifferenceMetric(field);
 
   if (titleEl) titleEl.textContent = `${label}分布`;
   if (statusEl) statusEl.textContent = `${rows.length} 名球员`;
@@ -208,15 +217,20 @@ export function updateBeeswarm() {
 
   const { points, bounds, pointRadius } = buildSwarm(rows);
   const selected = points.find((point) => point.row.player_id === state.selectedPlayerId) || null;
+  const hovered = state.hoveredPlayerId !== state.selectedPlayerId
+    ? points.find((point) => point.row.player_id === state.hoveredPlayerId) || null
+    : null;
   const baseData = points
-    .filter((point) => point !== selected)
+    .filter((point) => point !== selected && point !== hovered)
     .map((point) => ({
       value: point.value,
       row: point.row,
-      itemStyle: { opacity: selected ? 0.38 : 0.78 },
+      itemStyle: { opacity: selected || hovered ? 0.8 : 0.9 },
     }));
   const selectedData = selected ? [{ value: selected.value, row: selected.row }] : [];
+  const hoveredData = hovered ? [{ value: hovered.value, row: hovered.row }] : [];
   const labelPosition = selected && selected.value[0] > 0 ? "left" : "right";
+  const hoverLabelPosition = hovered && hovered.value[0] > 0 ? "left" : "right";
 
   chart.setOption({
     animationDuration: 260,
@@ -240,7 +254,7 @@ export function updateBeeswarm() {
       min: 0,
       max: 1,
       dimension: 2,
-      seriesIndex: [0, 2],
+      seriesIndex: [0, 2, 4],
       inRange: { color: [colors.negative, colors.muted, colors.positive] },
     },
     xAxis: {
@@ -269,6 +283,7 @@ export function updateBeeswarm() {
         symbolSize: pointRadius * 2,
         clip: false,
         emphasis: { focus: "self", scale: 1.35 },
+        blur: { itemStyle: { opacity: 0.8 } },
       },
       {
         name: "选中外圈",
@@ -300,6 +315,51 @@ export function updateBeeswarm() {
         label: {
           show: Boolean(selected),
           position: labelPosition,
+          distance: 10,
+          color: colors.ink,
+          backgroundColor: colors.panel,
+          borderColor: colors.line,
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: [4, 7],
+          width: 92,
+          overflow: "break",
+          lineHeight: 15,
+          fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--body-font").trim(),
+          fontSize: 12,
+          formatter: (params) => params.data.row.player_name,
+        },
+      },
+      {
+        name: "悬停外圈",
+        type: "scatter",
+        data: hoveredData,
+        symbolSize: pointRadius * 4.2,
+        silent: true,
+        clip: false,
+        itemStyle: {
+          color: "rgba(0,0,0,0)",
+          borderColor: colors.ink,
+          borderWidth: 2,
+          shadowBlur: 8,
+          shadowColor: colors.line,
+        },
+      },
+      {
+        name: "悬停球员",
+        type: "scatter",
+        data: hoveredData,
+        symbolSize: pointRadius * 2.6,
+        z: 3,
+        clip: false,
+        itemStyle: {
+          borderColor: colors.panel,
+          borderWidth: 2,
+          opacity: 1,
+        },
+        label: {
+          show: Boolean(hovered),
+          position: hoverLabelPosition,
           distance: 10,
           color: colors.ink,
           backgroundColor: colors.panel,

@@ -1,5 +1,5 @@
-import { state } from "./state.js?v=20260722-4";
-import { metricLabels } from "./format.js?v=20260722-4";
+import { state } from "./state.js?v=20260727-8";
+import { metricLabels } from "./format.js?v=20260727-8";
 
 export function applyUrlState(els) {
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -9,10 +9,10 @@ export function applyUrlState(els) {
     state.selectedTeam = team;
   }
 
-  const q = params.get("q");
-  if (q) {
-    state.searchTerm = q;
-    els.playerSearch.value = q;
+  const position = params.get("position");
+  if (position && (position === "ALL" || state.data.some((row) => row.position === position))) {
+    state.selectedPosition = position;
+    els.positionFilter.value = position;
   }
 
   const x = params.get("x");
@@ -46,8 +46,7 @@ export function applyUrlState(els) {
 export function writeUrlState() {
   const params = new URLSearchParams();
   if (state.selectedTeam !== "ALL") params.set("team", state.selectedTeam);
-  const term = state.searchTerm.trim();
-  if (term) params.set("q", term);
+  if (state.selectedPosition !== "ALL") params.set("position", state.selectedPosition);
   if (state.xMetric !== "actual_salary_m") params.set("x", state.xMetric);
   if (state.yMetric !== "expected_minus_actual_m") params.set("y", state.yMetric);
   if (state.beeswarmMetric !== "average_expected_salary_m") params.set("beeswarm", state.beeswarmMetric);

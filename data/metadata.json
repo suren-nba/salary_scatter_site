@@ -1,16 +1,25 @@
 {
   "dataset_name": "NBA Salary Value Explorer",
-  "version": "1.0.0",
-  "updated_at": "2026-07-14T07:56:20+08:00",
-  "source_data": "D:\\nba\\salary_scatter_web.json",
-  "player_count": 523,
-  "original_player_count": 525,
-  "excluded_player_count": 2,
+  "version": "2.0.0",
+  "updated_at": "2026-07-26T14:24:46.479Z",
+  "source_data": "薪金仓库.xlsx",
+  "source_sheet": "球员薪资数值",
+  "player_count": 535,
   "salary_unit": "million_usd",
-  "expected_minus_actual_label": "合同价值差",
+  "source_prediction_salary_unit": "ten_thousand_usd",
+  "source_last_season_actual_salary_unit": "usd",
+  "expected_minus_actual_label": "新赛季合同价值差",
   "expected_minus_actual_definition": "average_expected_salary_m - actual_salary_m",
-  "headshot_format": "webp",
-  "headshot_source_dir": "D:\\nba\\headshot",
-  "headshot_webp_dir": "D:\\nba\\headshot(webp)",
-  "logo_source": "D:\\nba\\www\\sr_logo_nav_white.png"
+  "last_season_expected_minus_actual_label": "上赛季合同价值差",
+  "last_season_expected_minus_actual_definition": "last_season_value_salary_m - last_season_actual_salary_m",
+  "position_mapping": {
+    "PG": "控卫",
+    "SG": "分卫",
+    "SF": "小前锋",
+    "PF": "大前锋",
+    "C": "中锋"
+  },
+  "no_team_code": "NA",
+  "no_team_label": "无球队",
+  "headshot_format": "webp"
 }

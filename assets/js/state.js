@@ -1,24 +1,25 @@
-import { average, isNumber } from "./format.js?v=20260722-4";
+import { average, isNumber } from "./format.js?v=20260727-8";
 
 export const state = {
   data: [],
   metadata: {},
   filtered: [],
   selectedTeam: "ALL",
-  searchTerm: "",
+  selectedPosition: "ALL",
   xMetric: "actual_salary_m",
   yMetric: "expected_minus_actual_m",
   beeswarmMetric: "average_expected_salary_m",
   showAvatars: false,
   selectedPlayerId: null,
+  hoveredPlayerId: null,
+  tableVisiblePlayerIds: null,
 };
 
 export function applyFilters() {
-  const term = state.searchTerm.trim().toLowerCase();
   state.filtered = state.data.filter((row) => {
     const teamOk = state.selectedTeam === "ALL" || row.team_abbreviation === state.selectedTeam;
-    const searchOk = !term || row.player_name.toLowerCase().includes(term);
-    return teamOk && searchOk;
+    const positionOk = state.selectedPosition === "ALL" || row.position === state.selectedPosition;
+    return teamOk && positionOk;
   });
 }
 
@@ -39,8 +40,12 @@ export function extremePlayer(rows, direction) {
 }
 
 export function teamRank(field, team) {
-  if (team === "ALL") return null;
-  const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))];
+  if (team === "ALL" || team === "NA") return null;
+  const teams = [...new Set(
+    state.data
+      .map((row) => row.team_abbreviation)
+      .filter((teamCode) => teamCode && teamCode !== "NA"),
+  )];
   const ranked = teams
     .map((teamCode) => ({
       team: teamCode,

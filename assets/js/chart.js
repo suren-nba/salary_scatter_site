@@ -1,13 +1,15 @@
-import { state } from "./state.js?v=20260722-4";
+import { state } from "./state.js?v=20260727-8";
 import {
   metricLabels,
   metricOrder,
   numberFontFamily,
   isNumber,
+  isDifferenceMetric,
   formatMoney,
   escapeHtml,
-} from "./format.js?v=20260722-4";
-import { getTheme } from "./theme.js?v=20260722-4";
+  teamDisplayName,
+} from "./format.js?v=20260727-8";
+import { getTheme } from "./theme.js?v=20260727-8";
 
 let chart = null;
 let chartEl = null;
@@ -49,17 +51,21 @@ function axisMax(values) {
 function tooltipHtml(row) {
   const metrics = metricOrder
     .map((field) => {
-      const signed = field === "expected_minus_actual_m";
+      const signed = isDifferenceMetric(field);
       return `<div><span>${metricLabels[field]}</span><strong>${formatMoney(row[field], signed)}</strong></div>`;
     })
     .join("");
+  const team = teamDisplayName(row.team_abbreviation);
+  const avatar = row.headshot_file
+    ? `<img class="avatar" src="${escapeHtml(row.headshot_file)}" alt="${escapeHtml(row.player_name)}" loading="lazy" onerror="this.style.display='none'">`
+    : "";
   return `
     <div class="chart-tooltip">
       <div class="chart-tooltip__top">
-        <img class="avatar" src="${escapeHtml(row.headshot_file)}" alt="${escapeHtml(row.player_name)}" loading="lazy" onerror="this.style.display='none'">
+        ${avatar}
         <div>
           <h3>${escapeHtml(row.player_name)}</h3>
-          <p>${escapeHtml(row.team_abbreviation)} · ${escapeHtml(row.team_name)}</p>
+          <p>${escapeHtml(team)} · ${escapeHtml(row.position)}</p>
         </div>
       </div>
       <div class="tooltip-metrics">${metrics}</div>
@@ -79,6 +85,9 @@ export function initChart(el, emptyElement, { onSelect: onSelectCallback } = {})
   chart.on("click", (params) => {
     if (params.data && params.data.row && onSelect) onSelect(params.data.row.player_id);
   });
+  chart.getZr().on("click", (event) => {
+    if (!event.target && onSelect) onSelect(null);
+  });
   return chart;
 }
 
@@ -93,6 +102,60 @@ export function resizeChart() {
   if (chart) chart.resize();
 }
 
+export function getChartShareTitle() {
+  return `X 轴：${metricLabels[state.xMetric]} VS Y 轴：${metricLabels[state.yMetric]}`;
+}
+
+function loadImage(source) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("散点图图片生成失败"));
+    image.src = source;
+  });
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("散点图图片生成失败"));
+    }, "image/png");
+  });
+}
+
+export async function createChartShareBlob() {
+  if (!chart) throw new Error("散点图尚未加载");
+  const colors = palette();
+  const chartImage = await loadImage(chart.getDataURL({
+    type: "png",
+    pixelRatio: 2,
+    backgroundColor: colors.panel,
+  }));
+  const padding = 72;
+  const headerHeight = 172;
+  const bottomPadding = 48;
+  const canvas = document.createElement("canvas");
+  canvas.width = chartImage.width + padding * 2;
+  canvas.height = chartImage.height + headerHeight + bottomPadding;
+  const context = canvas.getContext("2d");
+  const title = getChartShareTitle();
+  const titleSize = Math.max(28, Math.min(44, (canvas.width - padding * 2) / Math.max(16, title.length * 0.62)));
+
+  context.fillStyle = colors.panel;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = colors.ink;
+  context.font = `800 ${titleSize}px ${numberFontFamily}`;
+  context.textBaseline = "top";
+  context.fillText(title, padding, 46, canvas.width - padding * 2);
+  context.fillStyle = colors.muted;
+  context.font = `600 ${Math.max(20, titleSize * 0.58)}px ${numberFontFamily}`;
+  context.fillText("数据by库昊&via salary.surennba.com", padding, 108, canvas.width - padding * 2);
+  context.drawImage(chartImage, padding, headerHeight);
+
+  return canvasToBlob(canvas);
+}
+
 export function updateChart() {
   if (!chart) return;
   const colors = palette();
@@ -101,12 +164,10 @@ export function updateChart() {
   const yValues = rows.map((row) => row[state.yMetric]);
   const minLine = Math.min(axisMin(state.xMetric, xValues), axisMin(state.yMetric, yValues));
   const maxLine = Math.max(axisMax(xValues), axisMax(yValues));
-  const term = state.searchTerm.trim().toLowerCase();
   const highlighted = rows.filter((row) => {
-    const matchesSearch = term && row.player_name.toLowerCase().includes(term);
     const selected = state.selectedPlayerId && row.player_id === state.selectedPlayerId;
     const smallTeamAvatar = state.showAvatars && rows.length <= 80;
-    return matchesSearch || selected || smallTeamAvatar;
+    return selected || smallTeamAvatar;
   });
   const selectedVisible = rows.some((row) => row.player_id === state.selectedPlayerId);
 
@@ -129,22 +190,23 @@ export function updateChart() {
         : row.expected_minus_actual_m >= 0
           ? colors.positive
           : colors.negative,
-      opacity: selectedVisible && row.player_id !== state.selectedPlayerId ? 0.45 : 0.84,
+      opacity: selectedVisible && row.player_id !== state.selectedPlayerId ? 0.8 : 0.9,
     },
   }));
 
-  const avatarData = highlighted.map((row) => ({
+  const avatarData = highlighted.filter((row) => row.headshot_file).map((row) => ({
     value: [row[state.xMetric], row[state.yMetric]],
     row,
     symbol: `image://${row.headshot_file}`,
     symbolSize: row.player_id === state.selectedPlayerId ? 46 : 34,
+    itemStyle: { opacity: 1 },
   }));
 
   chart.setOption({
     animationDuration: 300,
     backgroundColor: "transparent",
     textStyle: { color: colors.ink, fontFamily: numberFontFamily },
-    grid: { left: 20, right: 20, top: 36, bottom: 88, containLabel: true },
+    grid: { left: 20, right: 20, top: 36, bottom: 44, containLabel: true },
     tooltip: {
       trigger: "item",
       borderWidth: 1,
@@ -155,17 +217,6 @@ export function updateChart() {
       extraCssText: "box-shadow:0 14px 38px rgba(0,0,0,.18);border-radius:8px;",
       formatter: (params) => tooltipHtml(params.data.row),
     },
-    toolbox: {
-      right: 8,
-      feature: {
-        dataZoom: { yAxisIndex: "none" },
-        restore: {},
-      },
-    },
-    dataZoom: [
-      { type: "inside", throttle: 80 },
-      { type: "slider", height: 24, bottom: 24 },
-    ],
     xAxis: {
       min: axisMin(state.xMetric, xValues),
       max: axisMax(xValues),
@@ -189,6 +240,7 @@ export function updateChart() {
         data: baseData,
         symbolSize: 12,
         emphasis: { focus: "self", scale: 1.5 },
+        blur: { itemStyle: { opacity: 0.8 } },
         markLine: {
           silent: true,
           symbol: "none",
@@ -203,7 +255,10 @@ export function updateChart() {
         data: avatarData,
         z: 3,
         tooltip: { show: true },
-        emphasis: { scale: 1.18 },
+        itemStyle: { opacity: 1 },
+        emphasis: { focus: "self", scale: 1.18, itemStyle: { opacity: 1 } },
+        blur: { itemStyle: { opacity: 1 } },
+        select: { itemStyle: { opacity: 1 } },
       },
     ],
   }, true);
