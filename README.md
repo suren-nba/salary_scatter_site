@@ -31,6 +31,7 @@
 ## 功能
 
 - 球员薪资散点图
+- 独立球员页面与八项薪资指标百分位
 - EPM、DARKO、综合预测薪水、新赛季与上赛季薪水等指标切换
 - 全联盟、无球队和 30 支球队筛选（支持键盘操作）、球员搜索、球员选中联动
 - 球员位置显示（控卫、分卫、小前锋、大前锋、中锋）
@@ -98,6 +99,7 @@ py -m http.server 8080
 ```text
 salary_scatter_site
 ├─ index.html
+├─ player.html
 ├─ assets
 │  ├─ brand
 │  ├─ css

@@ -1,10 +1,10 @@
-import { state } from "./state.js?v=20260727-8";
+import { state } from "./state.js?v=20260728-3";
 import {
   escapeHtml,
   formatMoney,
   formatSurplusHtml,
   teamDisplayName,
-} from "./format.js?v=20260727-8";
+} from "./format.js?v=20260728-3";
 
 let table = null;
 let visibleRowsTimer = null;
@@ -39,7 +39,10 @@ function tableColumns() {
       field: "player_name",
       minWidth: 180,
       responsive: 0,
-      formatter: (cell) => `<strong>${escapeHtml(cell.getValue())}</strong>`,
+      formatter: (cell) => {
+        const player = cell.getRow().getData();
+        return `<a class="player-link" href="./player.html?id=${encodeURIComponent(player.player_id)}">${escapeHtml(cell.getValue())}</a>`;
+      },
     },
     {
       title: "球队",
@@ -52,7 +55,7 @@ function tableColumns() {
     { title: "EPM预测薪水", field: "epm_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 110, responsive: 2, formatter: moneyFormatter },
     { title: "DARKO预测薪水", field: "darko_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 120, responsive: 3, formatter: moneyFormatter },
     { title: "综合预测薪水", field: "average_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 130, responsive: 0, formatter: moneyFormatter },
-    { title: "新赛季薪水", field: "actual_salary_m", sorter: "number", hozAlign: "right", minWidth: 110, responsive: 0, formatter: moneyFormatter },
+    { title: "新赛季实际薪水", field: "actual_salary_m", sorter: "number", hozAlign: "right", minWidth: 125, responsive: 0, formatter: moneyFormatter },
     { title: "新赛季合同价值差", field: "expected_minus_actual_m", sorter: "number", hozAlign: "right", minWidth: 130, responsive: 0, formatter: surplusFormatter },
     { title: "上赛季表现薪水", field: "last_season_value_salary_m", sorter: "number", hozAlign: "right", minWidth: 120, responsive: 4, formatter: moneyFormatter },
     { title: "上赛季实际薪水", field: "last_season_actual_salary_m", sorter: "number", hozAlign: "right", minWidth: 120, responsive: 4, formatter: moneyFormatter },
@@ -117,7 +120,8 @@ export function setupTable(selector, {
     columns: tableColumns(),
   });
 
-  table.on("rowClick", (_event, row) => {
+  table.on("rowClick", (event, row) => {
+    if (event.target.closest(".player-link")) return;
     if (onRowClick) onRowClick(row.getData().player_id);
   });
 

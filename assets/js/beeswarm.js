@@ -1,5 +1,6 @@
-import { state } from "./state.js?v=20260727-8";
+import { state } from "./state.js?v=20260728-3";
 import {
+  aggregate,
   escapeHtml,
   formatMoney,
   isNumber,
@@ -7,8 +8,8 @@ import {
   metricLabels,
   numberFontFamily,
   teamDisplayName,
-} from "./format.js?v=20260727-8";
-import { getTheme } from "./theme.js?v=20260727-8";
+} from "./format.js?v=20260728-3";
+import { getTheme } from "./theme.js?v=20260728-3";
 
 let chart = null;
 let chartEl = null;
@@ -16,8 +17,11 @@ let emptyEl = null;
 let titleEl = null;
 let statusEl = null;
 let onSelect = null;
+let hasRendered = false;
+let layoutCacheKey = null;
+let layoutCache = null;
 
-const GRID = { left: 62, right: 96, top: 24, bottom: 44 };
+const GRID = { left: 62, right: 106, top: 24, bottom: 44 };
 
 function cssColor(name, fallback) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
@@ -31,7 +35,9 @@ function palette() {
     negative: cssColor("--negative", "#9d2e2a"),
     panel: cssColor("--panel", "#ffffff"),
     line: cssColor("--line", "rgba(44, 62, 80, 0.14)"),
-    accent: cssColor("--accent", "#d9534f"),
+    selection: getTheme() === "dark"
+      ? "#ffffff"
+      : cssColor("--dark", "#CA5C55"),
   };
 }
 
@@ -121,6 +127,16 @@ function buildSwarm(rows) {
   return { points: placed, bounds, pointRadius };
 }
 
+function getSwarmLayout(rows) {
+  const dimensions = `${chartEl?.clientWidth || 0}x${chartEl?.clientHeight || 0}`;
+  const playerIds = rows.map((row) => row.player_id).join(",");
+  const cacheKey = `${state.beeswarmMetric}|${dimensions}|${playerIds}`;
+  if (layoutCache && layoutCacheKey === cacheKey) return layoutCache;
+  layoutCacheKey = cacheKey;
+  layoutCache = buildSwarm(rows);
+  return layoutCache;
+}
+
 function leagueRank(row) {
   const field = state.beeswarmMetric;
   const value = row[field];
@@ -166,7 +182,8 @@ export function initBeeswarm(el, emptyElement, {
   titleEl = titleElement;
   statusEl = statusElement;
   onSelect = onSelectCallback;
-  chart = echarts.init(chartEl, getTheme() === "dark" ? "dark" : null, { renderer: "canvas" });
+  hasRendered = false;
+  chart = echarts.init(chartEl, null, { renderer: "canvas" });
   if (emptyEl && !chartEl.contains(emptyEl)) chartEl.appendChild(emptyEl);
   chart.on("click", (params) => {
     if (params.data?.row && onSelect) onSelect(params.data.row.player_id);
@@ -201,6 +218,11 @@ export function updateBeeswarm() {
   const field = state.beeswarmMetric;
   const label = metricLabels[field];
   const signed = isDifferenceMetric(field);
+  const referenceMode = state.cardRankingMode;
+  const referenceValue = referenceMode === "total"
+    ? null
+    : aggregate(rows, field, referenceMode);
+  const referenceLabel = referenceMode === "median" ? "中位数" : "平均";
 
   if (titleEl) titleEl.textContent = `${label}分布`;
   if (statusEl) statusEl.textContent = `${rows.length} 名球员`;
@@ -212,10 +234,11 @@ export function updateBeeswarm() {
   }
   if (!rows.length) {
     chart.clear();
+    chart.setOption({ backgroundColor: "transparent", animation: false }, true);
     return;
   }
 
-  const { points, bounds, pointRadius } = buildSwarm(rows);
+  const { points, bounds, pointRadius } = getSwarmLayout(rows);
   const selected = points.find((point) => point.row.player_id === state.selectedPlayerId) || null;
   const hovered = state.hoveredPlayerId !== state.selectedPlayerId
     ? points.find((point) => point.row.player_id === state.hoveredPlayerId) || null
@@ -232,9 +255,11 @@ export function updateBeeswarm() {
   const labelPosition = selected && selected.value[0] > 0 ? "left" : "right";
   const hoverLabelPosition = hovered && hovered.value[0] > 0 ? "left" : "right";
 
+  const isInitialRender = !hasRendered;
   chart.setOption({
-    animationDuration: 260,
-    animationDurationUpdate: 220,
+    animation: isInitialRender,
+    animationDuration: isInitialRender ? 260 : 0,
+    animationDurationUpdate: 0,
     backgroundColor: "transparent",
     textStyle: { color: colors.ink, fontFamily: numberFontFamily },
     grid: GRID,
@@ -284,20 +309,44 @@ export function updateBeeswarm() {
         clip: false,
         emphasis: { focus: "self", scale: 1.35 },
         blur: { itemStyle: { opacity: 0.8 } },
+        markLine: referenceValue === null ? undefined : {
+          silent: true,
+          symbol: "none",
+          lineStyle: {
+            type: "dashed",
+            color: colors.ink,
+            opacity: 0.58,
+            width: 1.5,
+          },
+          label: {
+            show: true,
+            position: "end",
+            distance: 8,
+            color: colors.ink,
+            backgroundColor: colors.panel,
+            borderColor: colors.line,
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: [3, 6],
+            formatter: `${referenceLabel} ${formatMoney(referenceValue, signed)}`,
+          },
+          data: [{ yAxis: referenceValue }],
+        },
       },
       {
         name: "选中外圈",
         type: "scatter",
         data: selectedData,
         symbolSize: pointRadius * 4.8,
+        z: 3,
         silent: true,
         clip: false,
         itemStyle: {
           color: "rgba(0,0,0,0)",
-          borderColor: colors.accent,
+          borderColor: colors.selection,
           borderWidth: 2,
           shadowBlur: 12,
-          shadowColor: colors.accent,
+          shadowColor: colors.selection,
         },
       },
       {
@@ -335,6 +384,7 @@ export function updateBeeswarm() {
         type: "scatter",
         data: hoveredData,
         symbolSize: pointRadius * 4.2,
+        z: 5,
         silent: true,
         clip: false,
         itemStyle: {
@@ -350,7 +400,7 @@ export function updateBeeswarm() {
         type: "scatter",
         data: hoveredData,
         symbolSize: pointRadius * 2.6,
-        z: 3,
+        z: 6,
         clip: false,
         itemStyle: {
           borderColor: colors.panel,
@@ -377,4 +427,5 @@ export function updateBeeswarm() {
       },
     ],
   }, true);
+  hasRendered = true;
 }

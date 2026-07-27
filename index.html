@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NBA 球员薪资价值评估</title>
     <meta name="description" content="NBA 球员薪资价值评估与可视化。">
-    <link rel="icon" href="./assets/brand/sr-logo.png?v=20260727-8">
+    <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260727-8">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-3">
   </head>
   <body>
     <header class="topbar">
       <div class="topbar__inner">
         <a class="brand" href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer" aria-label="返回 SuRen NBA 主站">
-          <img src="./assets/brand/sr-logo.png?v=20260727-8" alt="SR Logo">
+          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo">
         </a>
         <div class="title-block">
           <h1>NBA 球员薪资价值评估</h1>
         </div>
         <div class="topbar__meta">
-          <span class="source-credit">数据来自微博-<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
+          <span class="source-credit">数据源<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
           <div class="theme-control" title="配色主题：珊瑚浅色">
             <span class="theme-control__label">配色</span>
             <label class="theme-slider">
@@ -43,21 +43,21 @@
           </strong>
         </article>
         <article class="stat">
-          <span>最超值球员</span>
+          <span id="statBestValueLabel">新赛季最超值球员</span>
           <strong class="player-stat">
             <img id="statBestValueHeadshot" class="player-stat__headshot avatar" alt="" hidden>
-            <span id="statBestValueName">--</span>
+            <a id="statBestValueName">--</a>
           </strong>
         </article>
         <article class="stat">
-          <span>最溢价球员</span>
+          <span id="statMostOverpaidLabel">新赛季最溢价球员</span>
           <strong class="player-stat">
             <img id="statMostOverpaidHeadshot" class="player-stat__headshot avatar" alt="" hidden>
-            <span id="statMostOverpaidName">--</span>
+            <a id="statMostOverpaidName">--</a>
           </strong>
         </article>
         <article class="stat stat-metric-card">
-          <span id="statXMetricLabel">X轴指标 · 新赛季薪水</span>
+          <span id="statXMetricLabel">X轴指标 · 新赛季实际薪水</span>
           <strong id="statActual" class="stat-metric-value">--</strong>
         </article>
         <article class="stat stat-metric-card">
@@ -93,13 +93,21 @@
             <option value="中锋">中锋</option>
           </select>
         </label>
-        <label>
+        <label class="metric-control">
           <span>X 轴指标</span>
           <select id="xMetric"></select>
         </label>
-        <label>
+        <label class="metric-control">
           <span>Y 轴指标</span>
           <select id="yMetric"></select>
+        </label>
+        <label class="card-ranking-control">
+          <span>卡片排名逻辑</span>
+          <select id="cardRankingMode">
+            <option value="average">平均</option>
+            <option value="median">中位数</option>
+            <option value="total">总数</option>
+          </select>
         </label>
         <label class="toggle-control">
           <input id="avatarToggle" type="checkbox">
@@ -114,7 +122,7 @@
             <h2>薪资价值散点图</h2>
             <p id="chartHelp">新赛季合同价值差为正显示为绿色，为负显示为红色。</p>
             <p class="chart-axis-summary" aria-live="polite">
-              X 轴：<strong id="chartXMetricLabel">新赛季薪水</strong>
+              X 轴：<strong id="chartXMetricLabel">新赛季实际薪水</strong>
               <span aria-hidden="true">｜</span>
               Y 轴：<strong id="chartYMetricLabel">新赛季合同价值差</strong>
             </p>
@@ -169,7 +177,7 @@
           </article>
           <article>
             <h3>EPM预测薪水</h3>
-            <p>基于 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill" target="_blank" rel="noopener noreferrer">Dunksandthrees</a> 统计的球员上赛季出勤与预测版 EPM 预估表现换算的薪资估计，单位为百万美元。若无数据，指该球员上赛季出勤可信度低。</p>
+            <p>基于 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill" target="_blank" rel="noopener noreferrer">Dunksandthrees</a> 统计的球员上赛季常规赛出勤与预测版 EPM 预估表现换算的薪资估计，单位为百万美元。若无数据，指该球员上赛季出勤可信度低。</p>
           </article>
           <article>
             <h3>DARKO预测薪水</h3>
@@ -180,16 +188,16 @@
             <p>EPM 预测薪水与 DARKO 预测薪水的简单平均。预测球员在新赛季打出的综合贡献能换算成多少工资</p>
           </article>
           <article>
-            <h3>新赛季薪水</h3>
+            <h3>新赛季实际薪水</h3>
             <p>即 NBA 2026-27 赛季的实际薪资，单位为百万美元。若无数据，指该球员详细合同薪水未披露。</p>
           </article>
           <article class="wide-note">
             <h3>新赛季合同价值差</h3>
-            <p><strong>新赛季合同价值差 = 综合预测薪水 − 新赛季薪水。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，新赛季合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，新赛季合同可能存在溢价。但该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
+            <p><strong>新赛季合同价值差 = 综合预测薪水 − 新赛季实际薪水。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，新赛季合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，新赛季合同可能存在溢价。但该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
           </article>
           <article>
             <h3>上赛季表现薪水</h3>
-            <p>基于上赛季 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill&amp;m=ewins" target="_blank" rel="noopener noreferrer">EPM Wins</a> 累计贡献，即根据上赛季综合表现价值换算的薪资参考。</p>
+            <p>基于上赛季常规赛<a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill&amp;m=ewins" target="_blank" rel="noopener noreferrer">EPM Wins</a> 累计贡献，即根据上赛季综合表现价值换算的薪资参考。</p>
           </article>
           <article>
             <h3>上赛季实际薪水</h3>
@@ -211,6 +219,6 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script type="module" src="./assets/js/main.js?v=20260727-8"></script>
+    <script type="module" src="./assets/js/main.js?v=20260728-3"></script>
   </body>
 </html>

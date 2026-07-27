@@ -1,10 +1,11 @@
-import { average, isNumber } from "./format.js?v=20260727-8";
+import { aggregate, isNumber } from "./format.js?v=20260728-3";
 
 export const state = {
   data: [],
   filtered: [],
   selectedTeam: "ALL",
   selectedPosition: "ALL",
+  cardRankingMode: "average",
   xMetric: "actual_salary_m",
   yMetric: "expected_minus_actual_m",
   beeswarmMetric: "average_expected_salary_m",
@@ -27,18 +28,18 @@ export function teamScopeRows() {
   return state.data.filter((row) => row.team_abbreviation === state.selectedTeam);
 }
 
-export function extremePlayer(rows, direction) {
-  const candidates = rows.filter((row) => isNumber(row.expected_minus_actual_m));
+export function extremePlayer(rows, direction, field = "expected_minus_actual_m") {
+  const candidates = rows.filter((row) => isNumber(row[field]));
   if (!candidates.length) return null;
   return candidates.slice().sort((a, b) => {
     const difference = direction === "max"
-      ? b.expected_minus_actual_m - a.expected_minus_actual_m
-      : a.expected_minus_actual_m - b.expected_minus_actual_m;
+      ? b[field] - a[field]
+      : a[field] - b[field];
     return difference || a.player_name.localeCompare(b.player_name);
   })[0];
 }
 
-export function teamRank(field, team) {
+export function teamRank(field, team, mode = "average", position = "ALL") {
   if (team === "ALL" || team === "NA") return null;
   const teams = [...new Set(
     state.data
@@ -48,7 +49,14 @@ export function teamRank(field, team) {
   const ranked = teams
     .map((teamCode) => ({
       team: teamCode,
-      value: average(state.data.filter((row) => row.team_abbreviation === teamCode), field),
+      value: aggregate(
+        state.data.filter((row) => (
+          row.team_abbreviation === teamCode
+          && (position === "ALL" || row.position === position)
+        )),
+        field,
+        mode,
+      ),
     }))
     .filter((item) => isNumber(item.value))
     .sort((a, b) => b.value - a.value || a.team.localeCompare(b.team));

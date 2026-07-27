@@ -1,16 +1,13 @@
-import { state } from "./state.js?v=20260727-8";
+import { state } from "./state.js?v=20260728-3";
 import {
   metricLabels,
-  metricOrder,
   numberFontFamily,
   isNumber,
   isDifferenceMetric,
   formatMoney,
   escapeHtml,
   teamDisplayName,
-} from "./format.js?v=20260727-8";
-import { getTheme } from "./theme.js?v=20260727-8";
-
+} from "./format.js?v=20260728-3";
 let chart = null;
 let chartEl = null;
 let emptyEl = null;
@@ -48,13 +45,37 @@ function axisMax(values) {
   return Math.ceil((max + 4) / 5) * 5;
 }
 
+function leagueStanding(row, field) {
+  const value = row[field];
+  const leagueRows = state.data.filter((item) => isNumber(item[field]));
+  const rank = 1 + leagueRows.filter((item) => item[field] > value).length;
+  const below = leagueRows.filter((item) => item[field] < value).length;
+  return {
+    rank,
+    total: leagueRows.length,
+    percentile: leagueRows.length <= 1 ? 100 : (below / (leagueRows.length - 1)) * 100,
+  };
+}
+
+function tooltipMetricHtml(row, field) {
+  const standing = leagueStanding(row, field);
+  const value = formatMoney(row[field], isDifferenceMetric(field));
+  return `
+    <div class="tooltip-metric">
+      <span>${escapeHtml(metricLabels[field])}</span>
+      <span class="tooltip-metric__value">
+        <strong class="tooltip-metric__percentile" style="--metric-percentile:${standing.percentile.toFixed(1)}%" title="联盟百分位 ${Math.round(standing.percentile)}%">${value}</strong>
+        <small class="tooltip-metric__rank">${standing.rank}/${standing.total}</small>
+      </span>
+    </div>
+  `;
+}
+
 function tooltipHtml(row) {
-  const metrics = metricOrder
-    .map((field) => {
-      const signed = isDifferenceMetric(field);
-      return `<div><span>${metricLabels[field]}</span><strong>${formatMoney(row[field], signed)}</strong></div>`;
-    })
-    .join("");
+  const metrics = [
+    tooltipMetricHtml(row, state.xMetric),
+    tooltipMetricHtml(row, state.yMetric),
+  ].join("");
   const team = teamDisplayName(row.team_abbreviation);
   const avatar = row.headshot_file
     ? `<img class="avatar" src="${escapeHtml(row.headshot_file)}" alt="${escapeHtml(row.player_name)}" loading="lazy" onerror="this.style.display='none'">`
@@ -81,7 +102,7 @@ export function initChart(el, emptyElement, { onSelect: onSelectCallback } = {})
   chartEl = el;
   emptyEl = emptyElement;
   onSelect = onSelectCallback;
-  chart = echarts.init(chartEl, getTheme() === "dark" ? "dark" : null, { renderer: "canvas" });
+  chart = echarts.init(chartEl, null, { renderer: "canvas" });
   chart.on("click", (params) => {
     if (params.data && params.data.row && onSelect) onSelect(params.data.row.player_id);
   });

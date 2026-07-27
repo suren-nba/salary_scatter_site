@@ -1,16 +1,17 @@
 import {
   metricLabels,
   metricOrder,
-  average,
+  aggregate,
   formatMoney,
   formatSurplusHtml,
   isDifferenceMetric,
+  isLastSeasonMetric,
   teamLogoPath,
   ordinal,
   teamDisplayName,
   teamHasLogo,
-} from "./format.js?v=20260727-8";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260727-8";
+} from "./format.js?v=20260728-3";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260728-3";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -18,7 +19,7 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260727-8";
+} from "./teamPicker.js?v=20260728-3";
 import {
   initChart,
   rebuildChart,
@@ -26,30 +27,32 @@ import {
   updateChart,
   createChartShareBlob,
   getChartShareTitle,
-} from "./chart.js?v=20260727-8";
+} from "./chart.js?v=20260728-3";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js?v=20260727-8";
+} from "./table.js?v=20260728-3";
 import {
   initBeeswarm,
   rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260727-8";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260727-8";
-import { applyUrlState, writeUrlState } from "./urlState.js?v=20260727-8";
+} from "./beeswarm.js?v=20260728-3";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260728-3";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-3";
 
-const DEPLOY_VERSION = "20260727-8";
+const DEPLOY_VERSION = "20260728-3";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
   statTeamLogo: document.getElementById("statTeamLogo"),
   statTeamLabel: document.getElementById("statTeamLabel"),
+  statBestValueLabel: document.getElementById("statBestValueLabel"),
   statBestValueHeadshot: document.getElementById("statBestValueHeadshot"),
   statBestValueName: document.getElementById("statBestValueName"),
+  statMostOverpaidLabel: document.getElementById("statMostOverpaidLabel"),
   statMostOverpaidHeadshot: document.getElementById("statMostOverpaidHeadshot"),
   statMostOverpaidName: document.getElementById("statMostOverpaidName"),
   statActual: document.getElementById("statActual"),
@@ -64,6 +67,7 @@ const els = {
   teamFilterLabel: document.getElementById("teamFilterLabel"),
   teamFilterMenu: document.getElementById("teamFilterMenu"),
   positionFilter: document.getElementById("positionFilter"),
+  cardRankingMode: document.getElementById("cardRankingMode"),
   xMetric: document.getElementById("xMetric"),
   yMetric: document.getElementById("yMetric"),
   avatarToggle: document.getElementById("avatarToggle"),
@@ -88,6 +92,11 @@ let resizeTimer;
 let urlTimer;
 let shareBlob = null;
 let sharePrepareToken = 0;
+const rankingModeLabels = {
+  average: "平均",
+  median: "中位数",
+  total: "总数",
+};
 
 function scheduleUrlWrite() {
   window.clearTimeout(urlTimer);
@@ -95,15 +104,28 @@ function scheduleUrlWrite() {
 }
 
 function teamRankHtml(field) {
-  const rank = teamRank(field, state.selectedTeam);
+  const rank = teamRank(
+    field,
+    state.selectedTeam,
+    state.cardRankingMode,
+    state.selectedPosition,
+  );
   if (!rank) return "";
   const greenPercent = ((30 - rank) / 29) * 100;
-  return `<span class="team-rank" style="--rank-color:color-mix(in srgb,var(--positive) ${greenPercent.toFixed(1)}%,var(--negative))" title="30 支球队中按平均值从高到低排名">${ordinal(rank)}</span>`;
+  const modeLabel = rankingModeLabels[state.cardRankingMode];
+  return `<span class="team-rank" style="--rank-color:color-mix(in srgb,var(--positive) ${greenPercent.toFixed(1)}%,var(--negative))" title="30 支球队中按${modeLabel}从高到低排名">${ordinal(rank)}</span>`;
 }
 
 function updatePlayerStat(player, headshot, name) {
   headshot.hidden = !player?.headshot_file;
   name.textContent = player ? player.player_name : "--";
+  if (player) {
+    name.href = `./player.html?id=${encodeURIComponent(player.player_id)}`;
+    name.title = `查看 ${player.player_name} 的球员页面`;
+  } else {
+    name.removeAttribute("href");
+    name.removeAttribute("title");
+  }
   if (player?.headshot_file) {
     headshot.src = player.headshot_file;
     headshot.alt = player.player_name;
@@ -113,8 +135,8 @@ function updatePlayerStat(player, headshot, name) {
   }
 }
 
-function metricAverageHtml(rows, field) {
-  const value = average(rows, field);
+function metricAggregateHtml(rows, field) {
+  const value = aggregate(rows, field, state.cardRankingMode);
   return `${
     isDifferenceMetric(field)
       ? formatSurplusHtml(value)
@@ -135,23 +157,30 @@ function updateStats() {
     els.statTeamLogo.removeAttribute("src");
     els.statTeamLogo.alt = "";
   }
+  const useLastSeason = state.selectedTeam === "NA" || isLastSeasonMetric(state.beeswarmMetric);
+  const seasonLabel = useLastSeason ? "上赛季" : "新赛季";
+  const valueDifferenceField = useLastSeason
+    ? "last_season_expected_minus_actual_m"
+    : "expected_minus_actual_m";
+  els.statBestValueLabel.textContent = `${seasonLabel}最超值球员`;
+  els.statMostOverpaidLabel.textContent = `${seasonLabel}最溢价球员`;
   updatePlayerStat(
-    extremePlayer(teamRows, "max"),
+    extremePlayer(teamRows, "max", valueDifferenceField),
     els.statBestValueHeadshot,
     els.statBestValueName,
   );
   updatePlayerStat(
-    extremePlayer(teamRows, "min"),
+    extremePlayer(teamRows, "min", valueDifferenceField),
     els.statMostOverpaidHeadshot,
     els.statMostOverpaidName,
   );
   els.statXMetricLabel.textContent = `X轴指标 · ${metricLabels[state.xMetric]}`;
   els.statYMetricLabel.textContent = `Y轴指标 · ${metricLabels[state.yMetric]}`;
-  els.statActual.innerHTML = metricAverageHtml(rows, state.xMetric);
-  els.statExpected.innerHTML = metricAverageHtml(rows, state.yMetric);
+  els.statActual.innerHTML = metricAggregateHtml(rows, state.xMetric);
+  els.statExpected.innerHTML = metricAggregateHtml(rows, state.yMetric);
   const activeMetric = state.beeswarmMetric;
   els.statMetricLabel.textContent = `表格列指标 · ${metricLabels[activeMetric]}`;
-  els.statSurplus.innerHTML = metricAverageHtml(rows, activeMetric);
+  els.statSurplus.innerHTML = metricAggregateHtml(rows, activeMetric);
 }
 
 function setShareActionsDisabled(disabled) {
@@ -405,6 +434,12 @@ function bindEvents() {
     state.selectedPosition = els.positionFilter.value;
     refresh();
   });
+  els.cardRankingMode.addEventListener("change", () => {
+    state.cardRankingMode = els.cardRankingMode.value;
+    updateStats();
+    updateBeeswarm();
+    scheduleUrlWrite();
+  });
   els.xMetric.addEventListener("change", () => {
     state.xMetric = els.xMetric.value;
     syncChartAxisSummary();
@@ -427,6 +462,7 @@ function bindEvents() {
   els.resetBtn.addEventListener("click", () => {
     state.selectedTeam = "ALL";
     state.selectedPosition = "ALL";
+    state.cardRankingMode = "average";
     state.xMetric = "actual_salary_m";
     state.yMetric = "expected_minus_actual_m";
     state.beeswarmMetric = "average_expected_salary_m";
@@ -437,6 +473,7 @@ function bindEvents() {
     updateTeamPicker(els);
     setTeamPickerOpen(els, false);
     els.positionFilter.value = state.selectedPosition;
+    els.cardRankingMode.value = state.cardRankingMode;
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
     syncChartAxisSummary();

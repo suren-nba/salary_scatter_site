@@ -1,9 +1,9 @@
-import { state } from "./state.js?v=20260727-8";
+import { state } from "./state.js?v=20260728-3";
 import {
   teamDisplayName,
   teamHasLogo,
   teamLogoPath,
-} from "./format.js?v=20260727-8";
+} from "./format.js?v=20260728-3";
 
 function optionId(team) {
   return `team-option-${team === "ALL" ? "all" : team}`;

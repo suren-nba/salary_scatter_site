@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>球员薪资价值百分位</title>
+    <meta name="description" content="NBA 球员薪资价值数据与联盟、位置百分位。">
+    <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-3">
+    <link rel="stylesheet" href="./assets/css/player.css?v=20260728-4">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer" aria-label="返回 SuRen NBA 主站">
+          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo">
+        </a>
+        <div class="title-block">
+          <h1>NBA 球员薪资价值评估</h1>
+        </div>
+        <div class="topbar__meta">
+          <span class="source-credit">数据源:微博<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
+          <div class="theme-control" title="配色主题：珊瑚浅色">
+            <span class="theme-control__label">配色</span>
+            <label class="theme-slider">
+              <span class="theme-slider__endpoint theme-slider__endpoint--light" aria-hidden="true"></span>
+              <input id="themeSlider" type="range" min="0" max="4" step="1" value="0" aria-label="配色主题" aria-valuetext="珊瑚浅色">
+              <span class="theme-slider__endpoint theme-slider__endpoint--dark" aria-hidden="true"></span>
+            </label>
+          </div>
+          <a href="./index.html">返回薪资总览</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="player-page">
+      <section class="player-controls" aria-label="球员筛选">
+        <label>
+          <span>球队筛选</span>
+          <select id="playerTeamFilter"></select>
+        </label>
+        <label>
+          <span>球员筛选</span>
+          <select id="playerFilter"></select>
+        </label>
+        <fieldset class="percentile-scope">
+          <legend>百分位范围</legend>
+          <div class="scope-switch">
+            <button type="button" data-scope="league" aria-pressed="true">全联盟</button>
+            <button type="button" data-scope="position" aria-pressed="false">同位置</button>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="player-profile" aria-live="polite">
+        <header id="playerProfileHeader" class="player-profile__header">
+          <div class="player-portrait" id="playerPortraitWrap">
+            <img id="playerPortrait" alt="" hidden>
+          </div>
+          <div class="player-profile__identity">
+            <p id="playerEyebrow">球员薪资价值百分位</p>
+            <h2 id="playerName">数据加载中…</h2>
+            <div class="player-meta" id="playerMeta"></div>
+          </div>
+          <div class="player-profile__aside">
+            <div class="benchmark-summary">
+              <span id="benchmarkLabel">全联盟百分位</span>
+              <strong id="benchmarkCount">--</strong>
+            </div>
+            <div id="playerShare" class="chart-share player-share">
+              <button id="playerShareButton" class="chart-share__button" type="button" aria-haspopup="menu" aria-expanded="false">分享</button>
+              <div id="playerShareMenu" class="chart-share__menu" role="menu" hidden>
+                <button type="button" role="menuitem" data-player-share-action="social" disabled>社交媒体</button>
+                <button type="button" role="menuitem" data-player-share-action="copy" disabled>复制粘贴</button>
+                <button type="button" role="menuitem" data-player-share-action="download" disabled>下载本地</button>
+                <span id="playerShareFeedback" class="chart-share__feedback" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="percentile-guide" aria-hidden="true">
+          <span>低位</span>
+          <span>中位</span>
+          <span>高位</span>
+        </div>
+
+        <div id="metricGroups" class="metric-groups">
+          <p class="player-loading">正在加载球员数据…</p>
+        </div>
+      </section>
+
+      <section class="player-method">
+        <h2>如何理解？</h2>
+        <p>条形长度和圆形数字表示该球员在所选范围内的百分位，越靠右代表数值越高。右侧显示薪资数据，单位为百万美元。百分位用于相对位置比较，不代表真实交易价值或正式薪资建议（再此叠甲）</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>数据仅供可视化研究，模型估值不代表真实交易价值或正式薪资建议。</p>
+      <p>数据更新于2026/7.26，或有错误，烦请谅解。</p>
+    </footer>
+
+    <script type="module" src="./assets/js/player.js?v=20260728-4"></script>
+  </body>
+</html>

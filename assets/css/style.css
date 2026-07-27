@@ -365,9 +365,29 @@ main {
   line-height: 1.2;
 }
 
-.player-stat span {
+.player-stat span,
+.player-stat a {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.player-stat a,
+.player-link {
+  color: inherit;
+  font-weight: 800;
+  text-decoration-color: color-mix(in srgb, currentColor 38%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.player-stat a:hover,
+.player-link:hover {
+  color: var(--accent-strong);
+  text-decoration-color: currentColor;
+}
+
+.player-stat a:not([href]) {
+  text-decoration: none;
 }
 
 .avatar {
@@ -431,11 +451,15 @@ main {
 }
 
 .position-control {
-  flex: 0.65 1 120px;
+  flex: 0.55 1 112px;
 }
 
-.controls label:not(.toggle-control):not(.position-control) {
-  flex: 1.1 1 180px;
+.card-ranking-control {
+  flex: 0.7 1 132px;
+}
+
+.metric-control {
+  flex: 1 1 160px;
 }
 
 .toggle-control {
@@ -836,10 +860,37 @@ main {
   gap: 4px;
 }
 
-.tooltip-metrics div {
+.tooltip-metrics > div {
   display: flex;
   justify-content: space-between;
   gap: 14px;
+}
+
+.tooltip-metric {
+  align-items: center;
+}
+
+.tooltip-metric__value {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 7px;
+  text-align: right;
+}
+
+.tooltip-metric__percentile {
+  color: color-mix(
+    in srgb,
+    var(--positive) var(--metric-percentile),
+    var(--negative)
+  );
+}
+
+.tooltip-metric__rank {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .tooltip-metrics strong,
@@ -1171,7 +1222,8 @@ footer a {
 
   .team-filter-control,
   .position-control,
-  .controls label:not(.toggle-control):not(.position-control),
+  .card-ranking-control,
+  .metric-control,
   .toggle-control,
   .controls .reset-button {
     flex: 1 1 100%;

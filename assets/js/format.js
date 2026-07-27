@@ -2,7 +2,7 @@ export const metricLabels = {
   epm_expected_salary_m: "EPM预测薪水",
   darko_expected_salary_m: "DARKO预测薪水",
   average_expected_salary_m: "综合预测薪水",
-  actual_salary_m: "新赛季薪水",
+  actual_salary_m: "新赛季实际薪水",
   expected_minus_actual_m: "新赛季合同价值差",
   last_season_value_salary_m: "上赛季表现薪水",
   last_season_actual_salary_m: "上赛季实际薪水",
@@ -15,9 +15,18 @@ const differenceMetrics = new Set([
   "expected_minus_actual_m",
   "last_season_expected_minus_actual_m",
 ]);
+const lastSeasonMetrics = new Set([
+  "last_season_value_salary_m",
+  "last_season_actual_salary_m",
+  "last_season_expected_minus_actual_m",
+]);
 
 export function isDifferenceMetric(field) {
   return differenceMetrics.has(field);
+}
+
+export function isLastSeasonMetric(field) {
+  return lastSeasonMetrics.has(field);
 }
 
 export function escapeHtml(value) {
@@ -53,6 +62,22 @@ export function formatSurplusHtml(value) {
 export function average(rows, field) {
   const values = rows.map((row) => row[field]).filter(isNumber);
   if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+export function aggregate(rows, field, mode = "average") {
+  const values = rows.map((row) => row[field]).filter(isNumber);
+  if (!values.length) return null;
+  if (mode === "total") {
+    return values.reduce((sum, value) => sum + value, 0);
+  }
+  if (mode === "median") {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    return sorted.length % 2
+      ? sorted[middle]
+      : (sorted[middle - 1] + sorted[middle]) / 2;
+  }
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 

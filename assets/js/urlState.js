@@ -1,5 +1,5 @@
-import { state } from "./state.js?v=20260727-8";
-import { metricLabels } from "./format.js?v=20260727-8";
+import { state } from "./state.js?v=20260728-3";
+import { metricLabels } from "./format.js?v=20260728-3";
 
 export function applyUrlState(els) {
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -13,6 +13,12 @@ export function applyUrlState(els) {
   if (position && (position === "ALL" || state.data.some((row) => row.position === position))) {
     state.selectedPosition = position;
     els.positionFilter.value = position;
+  }
+
+  const card = params.get("card");
+  if (["average", "median", "total"].includes(card)) {
+    state.cardRankingMode = card;
+    els.cardRankingMode.value = card;
   }
 
   const x = params.get("x");
@@ -47,6 +53,7 @@ export function writeUrlState() {
   const params = new URLSearchParams();
   if (state.selectedTeam !== "ALL") params.set("team", state.selectedTeam);
   if (state.selectedPosition !== "ALL") params.set("position", state.selectedPosition);
+  if (state.cardRankingMode !== "average") params.set("card", state.cardRankingMode);
   if (state.xMetric !== "actual_salary_m") params.set("x", state.xMetric);
   if (state.yMetric !== "expected_minus_actual_m") params.set("y", state.yMetric);
   if (state.beeswarmMetric !== "average_expected_salary_m") params.set("beeswarm", state.beeswarmMetric);
