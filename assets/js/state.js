@@ -2,7 +2,6 @@ import { average, isNumber } from "./format.js?v=20260727-8";
 
 export const state = {
   data: [],
-  metadata: {},
   filtered: [],
   selectedTeam: "ALL",
   selectedPosition: "ALL",

@@ -85,32 +85,13 @@ Windows 环境也可以使用：
 py -m http.server 8080
 ```
 
-## 数据处理
-
-数据准备脚本位于 `scripts/`：
-
-- `scripts/prepare_site_data.py`
-- `scripts/convert_headshots.py`
-
-原始数据和头像资源在本地处理后，会生成网站直接读取的静态资源：
-
-- `data/salary_scatter_web.json`
-- `data/metadata.json`
-- `excluded_players.csv`
-- `headshot_conversion_report.csv`
-- `assets/headshots/{player_id}.webp`
-
-头像转换使用 Pillow 输出 WebP，保留透明通道，不放大、不裁切、不增加背景。
-
 ## 更新数据流程
 
-1. 更新源 JSON 数据。
-2. 更新或补充球员头像。
-3. 运行 `scripts/prepare_site_data.py`。
-4. 检查 `data/salary_scatter_web.json`、头像和转换报告。
-5. 本地启动 HTTP server，验证筛选、搜索、散点图、Tooltip、表格和球队摘要。
-6. 提交到 GitHub。
-7. 部署到静态托管平台。
+1. 在本地准备好 `data/salary_scatter_web.json`。
+2. 更新或补充 `assets/headshots/{player_id}.webp`。
+3. 本地启动 HTTP server，验证筛选、搜索、散点图、Tooltip、表格和球队摘要。
+4. 提交到 GitHub。
+5. 部署到静态托管平台。
 
 ## 目录结构
 
@@ -125,7 +106,6 @@ salary_scatter_site
 │  ├─ team-logos
 │  └─ vendor
 ├─ data
-├─ scripts
 ├─ README.md
 └─ .gitignore
 ```

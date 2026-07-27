@@ -479,12 +479,8 @@ async function init() {
   });
   syncThemeSlider();
 
-  const [data, metadata] = await Promise.all([
-    fetchJson("./data/salary_scatter_web.json"),
-    fetchJson("./data/metadata.json"),
-  ]);
+  const data = await fetchJson("./data/salary_scatter_web.json");
   state.data = data;
-  state.metadata = metadata;
 
   setupSelects();
   initChart(els.chart, els.chartEmpty, { onSelect: selectPlayer });
