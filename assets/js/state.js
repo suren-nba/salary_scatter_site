@@ -1,4 +1,4 @@
-import { aggregate, isNumber } from "./format.js?v=20260728-3";
+import { aggregate, isNumber } from "./format.js?v=20260728-6";
 
 export const state = {
   data: [],
@@ -9,7 +9,7 @@ export const state = {
   xMetric: "actual_salary_m",
   yMetric: "expected_minus_actual_m",
   beeswarmMetric: "average_expected_salary_m",
-  showAvatars: false,
+  showAvatars: true,
   selectedPlayerId: null,
   hoveredPlayerId: null,
   tableVisiblePlayerIds: null,

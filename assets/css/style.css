@@ -968,6 +968,67 @@ main {
   color: var(--ink);
 }
 
+.table-filter-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.table-filter-toggle {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0.64;
+}
+
+.table-filter-toggle::before {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  left: 6px;
+  top: 5px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.table-filter-toggle::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 1.5px;
+  left: 13px;
+  top: 14px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+.table-filter-toggle:hover,
+.table-filter-toggle:focus-visible,
+.table-filter-toggle[aria-expanded="true"] {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  opacity: 1;
+}
+
+.tabulator .tabulator-header .tabulator-col.table-filter-column .tabulator-header-filter {
+  display: none;
+}
+
+.tabulator .tabulator-header .tabulator-col.table-filter-column.table-filter-open .tabulator-header-filter {
+  display: block;
+  margin-top: 6px;
+}
+
 .tabulator .tabulator-header .tabulator-col.beeswarm-metric-column {
   cursor: pointer;
 }

@@ -10,8 +10,8 @@ import {
   ordinal,
   teamDisplayName,
   teamHasLogo,
-} from "./format.js?v=20260728-3";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260728-3";
+} from "./format.js?v=20260728-6";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260728-6";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -19,7 +19,7 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260728-3";
+} from "./teamPicker.js?v=20260728-6";
 import {
   initChart,
   rebuildChart,
@@ -27,23 +27,23 @@ import {
   updateChart,
   createChartShareBlob,
   getChartShareTitle,
-} from "./chart.js?v=20260728-3";
+} from "./chart.js?v=20260728-6";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js?v=20260728-3";
+} from "./table.js?v=20260728-8";
 import {
   initBeeswarm,
   rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260728-3";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260728-3";
-import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-3";
+} from "./beeswarm.js?v=20260728-8";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260728-6";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-6";
 
-const DEPLOY_VERSION = "20260728-3";
+const DEPLOY_VERSION = "20260728-8";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -466,7 +466,7 @@ function bindEvents() {
     state.xMetric = "actual_salary_m";
     state.yMetric = "expected_minus_actual_m";
     state.beeswarmMetric = "average_expected_salary_m";
-    state.showAvatars = false;
+    state.showAvatars = true;
     state.selectedPlayerId = null;
     state.hoveredPlayerId = null;
     state.tableVisiblePlayerIds = null;
@@ -477,7 +477,7 @@ function bindEvents() {
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
     syncChartAxisSummary();
-    els.avatarToggle.checked = false;
+    els.avatarToggle.checked = true;
     els.selectedPlayer.textContent = "未选中球员";
     syncBeeswarmMetricHeader(state.beeswarmMetric);
     refresh();

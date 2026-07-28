@@ -15,7 +15,7 @@ import {
   setThemeByIndex,
 } from "./theme.js?v=20260728-3";
 
-const DEPLOY_VERSION = "20260728-4";
+const DEPLOY_VERSION = "20260728-9";
 
 const state = {
   data: [],
@@ -55,7 +55,7 @@ const metricGroups = [
   },
   {
     title: "上赛季表现与合同",
-    description: "表现折算薪资、实际薪资与合同价值差",
+    description: "表现折算、实际薪资与合同价值差",
     fields: metricOrder.slice(5),
   },
 ];
@@ -267,9 +267,7 @@ async function createPlayerShareBlob() {
   context.fillStyle = colors.muted;
   context.font = `700 20px ${colors.numberFont}`;
   context.fillText("数据 by 库昊", 1410, 68);
-  context.fillStyle = colors.ink;
-  context.font = `900 27px ${colors.numberFont}`;
-  context.fillText(`${state.scope === "league" ? state.data.length : state.data.filter((row) => row.position === player.position).length} 名球员`, 1410, 112);
+  context.fillText("salary.surennba.com", 1410, 112);
 
   context.strokeStyle = colors.line;
   context.setLineDash([8, 7]);
@@ -325,12 +323,10 @@ async function createPlayerShareBlob() {
   context.moveTo(90, 1080);
   context.lineTo(1410, 1080);
   context.stroke();
-  context.textAlign = "left";
+  context.textAlign = "right";
   context.fillStyle = colors.muted;
   context.font = `600 17px ${colors.bodyFont}`;
-  context.fillText("百分位越高代表该项数值在所选范围内越高 · 数据仅供可视化研究", 90, 1120);
-  context.textAlign = "right";
-  context.fillText("网站:salary.surennba.com", 1410, 1120);
+  context.fillText("百分位越高代表该项数值在所选范围内越高 · 数据仅供可视化研究", 1410, 1120);
 
   return canvasToBlob(canvas);
 }
@@ -370,7 +366,7 @@ function setShareMenuOpen(open) {
 
 async function copyShareImage() {
   if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
-    throw new Error("当前浏览器不支持复制图片，请使用下载本地");
+    throw new Error("浏览器不支持复制图片，请使用下载本地");
   }
   await navigator.clipboard.write([
     new ClipboardItem({ "image/png": shareBlob }),
@@ -416,7 +412,7 @@ async function runShareAction(action) {
       return;
     }
     await copyShareImage();
-    els.shareFeedback.textContent = "设备不支持系统分享，图片已复制";
+    els.shareFeedback.textContent = "设备不支持分享，图片已复制";
   }
 }
 

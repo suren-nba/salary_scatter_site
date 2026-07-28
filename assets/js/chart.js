@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=20260728-3";
+import { state } from "./state.js?v=20260728-6";
 import {
   metricLabels,
   numberFontFamily,
@@ -7,11 +7,14 @@ import {
   formatMoney,
   escapeHtml,
   teamDisplayName,
-} from "./format.js?v=20260728-3";
+} from "./format.js?v=20260728-6";
 let chart = null;
 let chartEl = null;
 let emptyEl = null;
 let onSelect = null;
+const SHARE_CHART_WIDTH = 672;
+const SHARE_CHART_HEIGHT = 418;
+const SHARE_PIXEL_RATIO = 2;
 
 function cssColor(name, fallback) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
@@ -98,6 +101,46 @@ function chartRows() {
   return state.filtered.filter((row) => isNumber(row[state.xMetric]) && isNumber(row[state.yMetric]));
 }
 
+function normalizedValue(value, min, max) {
+  return max === min ? 0.5 : (value - min) / (max - min);
+}
+
+function avatarRows(rows) {
+  const eligible = rows.filter((row) => row.headshot_file);
+  const selected = eligible.find((row) => row.player_id === state.selectedPlayerId);
+  if (!state.showAvatars) return selected ? [selected] : [];
+  if (eligible.length <= 30) return eligible;
+
+  const xValues = eligible.map((row) => row[state.xMetric]);
+  const yValues = eligible.map((row) => row[state.yMetric]);
+  const xMin = Math.min(...xValues);
+  const xMax = Math.max(...xValues);
+  const yMin = Math.min(...yValues);
+  const yMax = Math.max(...yValues);
+  const ranked = eligible
+    .map((row) => {
+      const x = normalizedValue(row[state.xMetric], xMin, xMax);
+      const y = normalizedValue(row[state.yMetric], yMin, yMax);
+      return { row, score: x + y, x, y };
+    })
+    .sort((a, b) => (
+      a.score - b.score
+      || a.x - b.x
+      || a.y - b.y
+      || String(a.row.player_id).localeCompare(String(b.row.player_id))
+    ));
+
+  const bottomLeft = ranked.slice(0, 15);
+  const topRight = ranked.slice(-15);
+  const selectedRank = ranked.find((item) => item.row.player_id === state.selectedPlayerId);
+  if (selectedRank && !bottomLeft.includes(selectedRank) && !topRight.includes(selectedRank)) {
+    if (selectedRank.score >= 1) topRight[0] = selectedRank;
+    else bottomLeft[bottomLeft.length - 1] = selectedRank;
+  }
+
+  return [...bottomLeft, ...topRight].map((item) => item.row);
+}
+
 export function initChart(el, emptyElement, { onSelect: onSelectCallback } = {}) {
   chartEl = el;
   emptyEl = emptyElement;
@@ -124,7 +167,7 @@ export function resizeChart() {
 }
 
 export function getChartShareTitle() {
-  return `X 轴：${metricLabels[state.xMetric]} VS Y 轴：${metricLabels[state.yMetric]}`;
+  return `X 轴: ${metricLabels[state.xMetric]} VS Y 轴: ${metricLabels[state.yMetric]}`;
 }
 
 function loadImage(source) {
@@ -148,11 +191,30 @@ function canvasToBlob(canvas) {
 export async function createChartShareBlob() {
   if (!chart) throw new Error("散点图尚未加载");
   const colors = palette();
-  const chartImage = await loadImage(chart.getDataURL({
-    type: "png",
-    pixelRatio: 2,
-    backgroundColor: colors.panel,
-  }));
+  const originalSize = {
+    width: chart.getWidth(),
+    height: chart.getHeight(),
+  };
+  let chartImageSource;
+  try {
+    chart.resize({
+      width: SHARE_CHART_WIDTH,
+      height: SHARE_CHART_HEIGHT,
+      silent: true,
+    });
+    chartImageSource = chart.getDataURL({
+      type: "png",
+      pixelRatio: SHARE_PIXEL_RATIO,
+      backgroundColor: colors.panel,
+    });
+  } finally {
+    chart.resize({
+      width: originalSize.width,
+      height: originalSize.height,
+      silent: true,
+    });
+  }
+  const chartImage = await loadImage(chartImageSource);
   const padding = 72;
   const headerHeight = 172;
   const bottomPadding = 48;
@@ -185,11 +247,7 @@ export function updateChart() {
   const yValues = rows.map((row) => row[state.yMetric]);
   const minLine = Math.min(axisMin(state.xMetric, xValues), axisMin(state.yMetric, yValues));
   const maxLine = Math.max(axisMax(xValues), axisMax(yValues));
-  const highlighted = rows.filter((row) => {
-    const selected = state.selectedPlayerId && row.player_id === state.selectedPlayerId;
-    const smallTeamAvatar = state.showAvatars && rows.length <= 80;
-    return selected || smallTeamAvatar;
-  });
+  const highlighted = avatarRows(rows);
   const selectedVisible = rows.some((row) => row.player_id === state.selectedPlayerId);
 
   chartEl.setAttribute(
@@ -215,7 +273,7 @@ export function updateChart() {
     },
   }));
 
-  const avatarData = highlighted.filter((row) => row.headshot_file).map((row) => ({
+  const avatarData = highlighted.map((row) => ({
     value: [row[state.xMetric], row[state.yMetric]],
     row,
     symbol: `image://${row.headshot_file}`,

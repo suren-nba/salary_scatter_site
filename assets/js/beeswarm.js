@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=20260728-3";
+import { state } from "./state.js?v=20260728-6";
 import {
   aggregate,
   escapeHtml,
@@ -8,8 +8,8 @@ import {
   metricLabels,
   numberFontFamily,
   teamDisplayName,
-} from "./format.js?v=20260728-3";
-import { getTheme } from "./theme.js?v=20260728-3";
+} from "./format.js?v=20260728-6";
+import { getTheme } from "./theme.js?v=20260728-6";
 
 let chart = null;
 let chartEl = null;
@@ -42,7 +42,13 @@ function palette() {
 }
 
 function metricRows() {
-  return state.filtered.filter((row) => isNumber(row[state.beeswarmMetric]));
+  const tablePlayerIds = Array.isArray(state.tableVisiblePlayerIds)
+    ? new Set(state.tableVisiblePlayerIds)
+    : null;
+  return state.filtered.filter((row) => (
+    isNumber(row[state.beeswarmMetric])
+    && (!tablePlayerIds || tablePlayerIds.has(row.player_id))
+  ));
 }
 
 function axisBounds(values) {

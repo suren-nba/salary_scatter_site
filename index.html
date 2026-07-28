@@ -7,7 +7,7 @@
     <meta name="description" content="NBA 球员薪资价值评估与可视化。">
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-3">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-7">
   </head>
   <body>
     <header class="topbar">
@@ -110,8 +110,8 @@
           </select>
         </label>
         <label class="toggle-control">
-          <input id="avatarToggle" type="checkbox">
-          <span>球员散点适量显示头像</span>
+          <input id="avatarToggle" type="checkbox" checked>
+          <span>散点适量显示头像</span>
         </label>
         <button id="resetBtn" class="reset-button" type="button">重置</button>
       </section>
@@ -120,7 +120,7 @@
         <div class="section-heading">
           <div>
             <h2>薪资价值散点图</h2>
-            <p id="chartHelp">新赛季合同价值差为正显示为绿色，为负显示为红色。</p>
+            <p id="chartHelp">新赛季合同价值差为正显示为绿色，反之红色。</p>
             <p class="chart-axis-summary" aria-live="polite">
               X 轴：<strong id="chartXMetricLabel">新赛季实际薪水</strong>
               <span aria-hidden="true">｜</span>
@@ -219,6 +219,6 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script type="module" src="./assets/js/main.js?v=20260728-3"></script>
+    <script type="module" src="./assets/js/main.js?v=20260728-8"></script>
   </body>
 </html>

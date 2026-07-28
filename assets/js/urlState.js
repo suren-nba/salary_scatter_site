@@ -1,5 +1,5 @@
-import { state } from "./state.js?v=20260728-3";
-import { metricLabels } from "./format.js?v=20260728-3";
+import { state } from "./state.js?v=20260728-6";
+import { metricLabels } from "./format.js?v=20260728-6";
 
 export function applyUrlState(els) {
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -38,10 +38,10 @@ export function applyUrlState(els) {
     state.beeswarmMetric = beeswarm;
   }
 
-  if (params.get("avatars") === "1") {
-    state.showAvatars = true;
-    els.avatarToggle.checked = true;
-  }
+  const avatars = params.get("avatars");
+  if (avatars === "0") state.showAvatars = false;
+  else if (avatars === "1") state.showAvatars = true;
+  els.avatarToggle.checked = state.showAvatars;
 
   const sel = Number(params.get("sel"));
   if (sel && state.data.some((row) => row.player_id === sel)) {
@@ -57,7 +57,7 @@ export function writeUrlState() {
   if (state.xMetric !== "actual_salary_m") params.set("x", state.xMetric);
   if (state.yMetric !== "expected_minus_actual_m") params.set("y", state.yMetric);
   if (state.beeswarmMetric !== "average_expected_salary_m") params.set("beeswarm", state.beeswarmMetric);
-  if (state.showAvatars) params.set("avatars", "1");
+  if (!state.showAvatars) params.set("avatars", "0");
   if (state.selectedPlayerId) params.set("sel", String(state.selectedPlayerId));
 
   const hash = params.toString();

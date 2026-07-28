@@ -1,10 +1,10 @@
-import { state } from "./state.js?v=20260728-3";
+import { state } from "./state.js?v=20260728-6";
 import {
   escapeHtml,
   formatMoney,
   formatSurplusHtml,
   teamDisplayName,
-} from "./format.js?v=20260728-3";
+} from "./format.js?v=20260728-6";
 
 let table = null;
 let visibleRowsTimer = null;
@@ -18,6 +18,105 @@ const metricFields = new Set([
   "last_season_actual_salary_m",
   "last_season_expected_minus_actual_m",
 ]);
+
+function teamFilterValues() {
+  const teams = [...new Set(
+    state.data
+      .map((row) => row.team_abbreviation)
+      .filter(Boolean),
+  )].sort((a, b) => {
+    if (a === "NA") return 1;
+    if (b === "NA") return -1;
+    return a.localeCompare(b);
+  });
+  return Object.fromEntries(teams.map((team) => [team, teamDisplayName(team)]));
+}
+
+function positionFilterValues() {
+  const preferredOrder = ["控卫", "分卫", "小前锋", "大前锋", "中锋"];
+  const available = new Set(state.data.map((row) => row.position).filter(Boolean));
+  const positions = [
+    ...preferredOrder.filter((position) => available.delete(position)),
+    ...[...available].sort((a, b) => a.localeCompare(b, "zh-CN")),
+  ];
+  return Object.fromEntries(positions.map((position) => [position, position]));
+}
+
+function categoryHeaderFilter(values) {
+  return {
+    headerFilter: "list",
+    headerFilterFunc: "=",
+    headerFilterPlaceholder: "搜索/选择",
+    headerFilterParams: {
+      values,
+      autocomplete: true,
+      listOnEmpty: true,
+      clearable: true,
+      placeholder: "搜索或选择",
+    },
+  };
+}
+
+function filterableColumnTitle(title, field) {
+  return `
+    <span class="table-filter-title">
+      <span>${title}</span>
+      <button
+        class="table-filter-toggle"
+        type="button"
+        data-table-filter="${field}"
+        aria-label="筛选${title}"
+        aria-expanded="false"
+        title="筛选${title}"
+      ></button>
+    </span>
+  `;
+}
+
+function closeHeaderFilters(root, except = null) {
+  root.querySelectorAll(".table-filter-column.table-filter-open").forEach((column) => {
+    if (column === except) return;
+    column.classList.remove("table-filter-open");
+    column.querySelector(".table-filter-toggle")?.setAttribute("aria-expanded", "false");
+  });
+}
+
+function setupHeaderFilterToggles(selector) {
+  const root = document.querySelector(selector);
+  if (!root) return;
+
+  root.addEventListener("click", (event) => {
+    const button = event.target.closest(".table-filter-toggle");
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const column = button.closest(".table-filter-column");
+    if (!column) return;
+    const shouldOpen = !column.classList.contains("table-filter-open");
+    closeHeaderFilters(root, shouldOpen ? column : null);
+    column.classList.toggle("table-filter-open", shouldOpen);
+    button.setAttribute("aria-expanded", String(shouldOpen));
+    if (shouldOpen) {
+      window.requestAnimationFrame(() => {
+        column.querySelector(".tabulator-header-filter input")?.focus();
+      });
+    }
+  }, true);
+
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".table-filter-column.table-filter-open, .tabulator-edit-list")) return;
+    closeHeaderFilters(root);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const openColumn = root.querySelector(".table-filter-column.table-filter-open");
+    if (!openColumn) return;
+    const button = openColumn.querySelector(".table-filter-toggle");
+    closeHeaderFilters(root);
+    button?.focus();
+  });
+}
 
 function tableColumns() {
   const moneyFormatter = (cell) => `<span class="numeric-value">${formatMoney(cell.getValue())}</span>`;
@@ -39,6 +138,11 @@ function tableColumns() {
       field: "player_name",
       minWidth: 180,
       responsive: 0,
+      cssClass: "table-filter-column",
+      titleFormatter: () => filterableColumnTitle("球员", "player_name"),
+      headerFilter: "input",
+      headerFilterFunc: "like",
+      headerFilterPlaceholder: "搜索球员",
       formatter: (cell) => {
         const player = cell.getRow().getData();
         return `<a class="player-link" href="./player.html?id=${encodeURIComponent(player.player_id)}">${escapeHtml(cell.getValue())}</a>`;
@@ -47,11 +151,22 @@ function tableColumns() {
     {
       title: "球队",
       field: "team_abbreviation",
-      width: 86,
+      width: 112,
       responsive: 0,
+      cssClass: "table-filter-column",
+      titleFormatter: () => filterableColumnTitle("球队", "team_abbreviation"),
+      ...categoryHeaderFilter(teamFilterValues()),
       formatter: (cell) => escapeHtml(teamDisplayName(cell.getValue())),
     },
-    { title: "位置", field: "position", width: 86, responsive: 1 },
+    {
+      title: "位置",
+      field: "position",
+      width: 106,
+      responsive: 1,
+      cssClass: "table-filter-column",
+      titleFormatter: () => filterableColumnTitle("位置", "position"),
+      ...categoryHeaderFilter(positionFilterValues()),
+    },
     { title: "EPM预测薪水", field: "epm_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 110, responsive: 2, formatter: moneyFormatter },
     { title: "DARKO预测薪水", field: "darko_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 120, responsive: 3, formatter: moneyFormatter },
     { title: "综合预测薪水", field: "average_expected_salary_m", sorter: "number", hozAlign: "right", minWidth: 130, responsive: 0, formatter: moneyFormatter },
@@ -63,21 +178,15 @@ function tableColumns() {
   ];
 }
 
-function currentPagePlayerIds() {
+function activePlayerIds() {
   if (!table) return [];
-  const activeRows = table.getRows("active");
-  const pageSize = Number(table.getPageSize()) || activeRows.length || 1;
-  const currentPage = Math.max(Number(table.getPage()) || 1, 1);
-  const start = (currentPage - 1) * pageSize;
-  return activeRows
-    .slice(start, start + pageSize)
-    .map((row) => row.getData().player_id);
+  return table.getRows("active").map((row) => row.getData().player_id);
 }
 
 function scheduleVisibleRowsChange(callback) {
   if (!callback) return;
   window.clearTimeout(visibleRowsTimer);
-  visibleRowsTimer = window.setTimeout(() => callback(currentPagePlayerIds()), 0);
+  visibleRowsTimer = window.setTimeout(() => callback(activePlayerIds()), 0);
 }
 
 export function setupTable(selector, {
@@ -119,6 +228,7 @@ export function setupTable(selector, {
     initialSort: [{ column: "average_expected_salary_m", dir: "desc" }],
     columns: tableColumns(),
   });
+  setupHeaderFilterToggles(selector);
 
   table.on("rowClick", (event, row) => {
     if (event.target.closest(".player-link")) return;
@@ -143,6 +253,7 @@ export function setupTable(selector, {
     scheduleVisibleRowsChange(onVisibleRowsChange);
   });
   table.on("dataProcessed", () => scheduleVisibleRowsChange(onVisibleRowsChange));
+  table.on("dataFiltered", () => scheduleVisibleRowsChange(onVisibleRowsChange));
   table.on("dataSorted", () => scheduleVisibleRowsChange(onVisibleRowsChange));
   table.on("pageLoaded", () => scheduleVisibleRowsChange(onVisibleRowsChange));
 
