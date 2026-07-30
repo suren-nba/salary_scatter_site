@@ -434,8 +434,8 @@
   {
     "player_id": 201935,
     "player_name": "James Harden",
-    "team_name": "无球队",
-    "team_abbreviation": "NA",
+    "team_name": "Cleveland Cavaliers",
+    "team_abbreviation": "CLE",
     "position": "控卫",
     "epm_expected_salary_m": 33.3,
     "darko_expected_salary_m": 47.7,
@@ -2802,8 +2802,8 @@
   {
     "player_id": 203484,
     "player_name": "Kentavious Caldwell-Pope",
-    "team_name": "Memphis Grizzlies",
-    "team_abbreviation": "MEM",
+    "team_name": "Philadelphia 76ers",
+    "team_abbreviation": "PHI",
     "position": "分卫",
     "epm_expected_salary_m": 13.1,
     "darko_expected_salary_m": 12,
@@ -2811,8 +2811,8 @@
     "last_season_value_salary_m": 1.3,
     "last_season_actual_salary_m": 21.6,
     "last_season_expected_minus_actual_m": -20.3,
-    "actual_salary_m": 21.6,
-    "expected_minus_actual_m": -9,
+    "actual_salary_m": 3.9,
+    "expected_minus_actual_m": 8.7,
     "headshot_file": "assets/headshots/203484.webp"
   },
   {
@@ -3019,8 +3019,8 @@
     "last_season_value_salary_m": 6.9,
     "last_season_actual_salary_m": 11.6,
     "last_season_expected_minus_actual_m": -4.7,
-    "actual_salary_m": 2.5,
-    "expected_minus_actual_m": 9,
+    "actual_salary_m": 3.29,
+    "expected_minus_actual_m": 8.21,
     "headshot_file": "assets/headshots/1629680.webp"
   },
   {
@@ -3090,8 +3090,8 @@
   {
     "player_id": 203110,
     "player_name": "Draymond Green",
-    "team_name": "无球队",
-    "team_abbreviation": "NA",
+    "team_name": "Golden State Warriors",
+    "team_abbreviation": "GSW",
     "position": "中锋",
     "epm_expected_salary_m": 7.8,
     "darko_expected_salary_m": 14.9,
@@ -3099,8 +3099,8 @@
     "last_season_value_salary_m": 8.1,
     "last_season_actual_salary_m": 25.9,
     "last_season_expected_minus_actual_m": -17.8,
-    "actual_salary_m": null,
-    "expected_minus_actual_m": null,
+    "actual_salary_m": 27.7,
+    "expected_minus_actual_m": -16.3,
     "headshot_file": "assets/headshots/203110.webp"
   },
   {
@@ -5490,8 +5490,8 @@
   {
     "player_id": 1631207,
     "player_name": "Dalen Terry",
-    "team_name": "Philadelphia 76ers",
-    "team_abbreviation": "PHI",
+    "team_name": "无球队",
+    "team_abbreviation": "NA",
     "position": "小前锋",
     "epm_expected_salary_m": -0.4,
     "darko_expected_salary_m": 3,
@@ -7746,8 +7746,8 @@
   {
     "player_id": 1641780,
     "player_name": "Johni Broome",
-    "team_name": "Philadelphia 76ers",
-    "team_abbreviation": "PHI",
+    "team_name": "LA Clippers",
+    "team_abbreviation": "LAC",
     "position": "中锋",
     "epm_expected_salary_m": -0.4,
     "darko_expected_salary_m": -1.3,

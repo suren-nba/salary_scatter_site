@@ -652,6 +652,11 @@ main {
   padding: 18px;
 }
 
+.notes {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
 .analysis-grid {
   display: grid;
   grid-template-columns: minmax(0, 72fr) minmax(300px, 28fr);
@@ -699,15 +704,57 @@ main {
   color: var(--muted);
 }
 
+.table-section__heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title status"
+    "description download";
+  align-items: center;
+}
+
+.table-section__heading h2 {
+  grid-area: title;
+}
+
+.table-section__heading p {
+  grid-area: description;
+}
+
+.table-section__heading .status-pill {
+  grid-area: status;
+  justify-self: end;
+  max-width: min(100%, 520px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-download-button {
+  grid-area: download;
+  justify-self: end;
+  margin-top: 4px;
+}
+
 .chart-axis-summary {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 8px;
   font-size: 14px;
+}
+
+.chart-axis-summary__item {
+  white-space: nowrap;
 }
 
 .chart-axis-summary strong {
   color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .chart-axis-summary {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 
 .status-pill {
@@ -1242,6 +1289,28 @@ footer a {
 
   .section-heading {
     flex-direction: column;
+  }
+
+  .table-section__heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title"
+      "description description"
+      "status download";
+    align-items: center;
+  }
+
+  .table-section__heading .status-pill {
+    justify-self: start;
+    max-width: 100%;
+    margin-top: 12px;
+  }
+
+  .table-download-button {
+    align-self: end;
+    margin-top: 12px;
+    margin-left: 10px;
   }
 
   .chart-share {

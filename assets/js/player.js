@@ -15,8 +15,6 @@ import {
   setThemeByIndex,
 } from "./theme.js?v=20260728-3";
 
-const DEPLOY_VERSION = "20260728-9";
-
 const state = {
   data: [],
   selectedTeam: "ALL",
@@ -530,19 +528,18 @@ function populateTeamFilter() {
       if (b === "NA") return -1;
       return a.localeCompare(b);
     });
-  els.teamFilter.replaceChildren(new Option("全联盟", "ALL"));
-  teams.forEach((team) => {
-    els.teamFilter.appendChild(new Option(teamDisplayName(team), team));
-  });
+  els.teamFilter.replaceChildren(
+    new Option("全联盟", "ALL"),
+    ...teams.map((team) => new Option(teamDisplayName(team), team)),
+  );
   els.teamFilter.value = state.selectedTeam;
 }
 
 function populatePlayerFilter(preferredPlayerId = state.selectedPlayerId) {
   const players = playerOptions();
-  els.playerFilter.replaceChildren();
-  players.forEach((player) => {
-    els.playerFilter.appendChild(new Option(player.player_name, String(player.player_id)));
-  });
+  els.playerFilter.replaceChildren(
+    ...players.map((player) => new Option(player.player_name, String(player.player_id))),
+  );
   const preferred = players.find((player) => player.player_id === preferredPlayerId);
   state.selectedPlayerId = preferred?.player_id ?? players[0]?.player_id ?? null;
   els.playerFilter.value = state.selectedPlayerId ? String(state.selectedPlayerId) : "";
@@ -610,7 +607,10 @@ function bindEvents() {
 async function init() {
   initTheme(syncThemeSlider);
   syncThemeSlider();
-  const response = await fetch(`./data/salary_scatter_web.json?v=${DEPLOY_VERSION}`);
+  const response = await fetch(
+    document.getElementById("salaryDataPreload").href,
+    { cache: "force-cache" },
+  );
   if (!response.ok) throw new Error(`Failed to load data: HTTP ${response.status}`);
   state.data = await response.json();
 

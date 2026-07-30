@@ -167,7 +167,7 @@ export function resizeChart() {
 }
 
 export function getChartShareTitle() {
-  return `X 轴: ${metricLabels[state.xMetric]} VS Y 轴: ${metricLabels[state.yMetric]}`;
+  return `X 轴:${metricLabels[state.xMetric]} VS Y 轴:${metricLabels[state.yMetric]}`;
 }
 
 function loadImage(source) {

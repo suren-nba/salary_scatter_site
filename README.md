@@ -90,9 +90,11 @@ py -m http.server 8080
 
 1. 在本地准备好 `data/salary_scatter_web.json`。
 2. 更新或补充 `assets/headshots/{player_id}.webp`。
-3. 本地启动 HTTP server，验证筛选、搜索、散点图、Tooltip、表格和球队摘要。
-4. 提交到 GitHub。
-5. 部署到静态托管平台。
+3. 如果 JSON 内容发生变化，同时修改 `index.html` 与 `player.html` 中
+   `salaryDataPreload` 地址的 `v=data-...` 版本号；只改页面代码时不要修改这个数据版本号。
+4. 本地启动 HTTP server，验证筛选、搜索、散点图、Tooltip、表格和球队摘要。
+5. 提交到 GitHub。
+6. 部署到静态托管平台。
 
 ## 目录结构
 

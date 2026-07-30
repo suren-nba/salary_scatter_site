@@ -19,31 +19,28 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260728-6";
+} from "./teamPicker.js?v=20260730-5";
 import {
   initChart,
-  rebuildChart,
   resizeChart,
   updateChart,
   createChartShareBlob,
   getChartShareTitle,
-} from "./chart.js?v=20260728-6";
+} from "./chart.js?v=20260730-2";
 import {
   setupTable,
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
-} from "./table.js?v=20260728-8";
+  downloadTableData,
+} from "./table.js?v=20260730-3";
 import {
   initBeeswarm,
-  rebuildBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
 } from "./beeswarm.js?v=20260728-8";
 import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260728-6";
 import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-6";
-
-const DEPLOY_VERSION = "20260728-8";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -72,6 +69,7 @@ const els = {
   yMetric: document.getElementById("yMetric"),
   avatarToggle: document.getElementById("avatarToggle"),
   resetBtn: document.getElementById("resetBtn"),
+  downloadDataButton: document.getElementById("downloadDataButton"),
   chart: document.getElementById("chart"),
   chartEmpty: document.getElementById("chartEmpty"),
   chartXMetricLabel: document.getElementById("chartXMetricLabel"),
@@ -90,6 +88,7 @@ const els = {
 
 let resizeTimer;
 let urlTimer;
+let hoverFrame;
 let shareBlob = null;
 let sharePrepareToken = 0;
 const rankingModeLabels = {
@@ -269,6 +268,7 @@ function syncSelectedPlayerLabel() {
 }
 
 function selectPlayer(playerId) {
+  window.cancelAnimationFrame(hoverFrame);
   const player = state.data.find((row) => row.player_id === playerId);
   state.selectedPlayerId = player ? playerId : null;
   state.hoveredPlayerId = null;
@@ -282,7 +282,8 @@ function selectPlayer(playerId) {
 function hoverPlayer(playerId) {
   const player = state.filtered.find((row) => row.player_id === playerId);
   state.hoveredPlayerId = player ? playerId : null;
-  updateBeeswarm();
+  window.cancelAnimationFrame(hoverFrame);
+  hoverFrame = window.requestAnimationFrame(updateBeeswarm);
 }
 
 function selectBeeswarmMetric(field) {
@@ -459,6 +460,7 @@ function bindEvents() {
     updateChart();
     scheduleUrlWrite();
   });
+  els.downloadDataButton.addEventListener("click", downloadTableData);
   els.resetBtn.addEventListener("click", () => {
     state.selectedTeam = "ALL";
     state.selectedPosition = "ALL";
@@ -485,8 +487,8 @@ function bindEvents() {
   els.themeSlider.addEventListener("input", () => {
     setThemeByIndex(Number(els.themeSlider.value));
     syncThemeSlider();
-    rebuildChart();
-    rebuildBeeswarm();
+    updateChart();
+    updateBeeswarm();
   });
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
@@ -497,10 +499,13 @@ function bindEvents() {
   });
 }
 
-async function fetchJson(path) {
-  const response = await fetch(`${path}?v=${DEPLOY_VERSION}`);
+async function fetchJson() {
+  const response = await fetch(
+    document.getElementById("salaryDataPreload").href,
+    { cache: "force-cache" },
+  );
   if (!response.ok) {
-    throw new Error(`Failed to load ${path}: HTTP ${response.status}`);
+    throw new Error(`Failed to load salary data: HTTP ${response.status}`);
   }
   return response.json();
 }
@@ -511,12 +516,12 @@ async function init() {
   }
   initTheme(() => {
     syncThemeSlider();
-    rebuildChart();
-    rebuildBeeswarm();
+    updateChart();
+    updateBeeswarm();
   });
   syncThemeSlider();
 
-  const data = await fetchJson("./data/salary_scatter_web.json");
+  const data = await fetchJson();
   state.data = data;
 
   setupSelects();

@@ -5,15 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NBA 球员薪资价值评估</title>
     <meta name="description" content="NBA 球员薪资价值评估与可视化。">
+    <script>
+      (() => {
+        const themes = ["light", "gray", "taupe", "green", "dark"];
+        let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        try {
+          const saved = localStorage.getItem("salary-theme");
+          if (themes.includes(saved)) theme = saved;
+        } catch {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-7">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260730-4">
+    <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
+    <link rel="modulepreload" href="./assets/js/main.js?v=20260730-5">
   </head>
   <body>
     <header class="topbar">
       <div class="topbar__inner">
         <a class="brand" href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer" aria-label="返回 SuRen NBA 主站">
-          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo">
+          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo" width="635" height="304" decoding="async" fetchpriority="high">
         </a>
         <div class="title-block">
           <h1>NBA 球员薪资价值评估</h1>
@@ -38,21 +51,21 @@
         <article class="stat">
           <span>当前球队</span>
           <strong id="statTeam" class="team-stat">
-            <img id="statTeamLogo" class="team-stat__logo" alt="" hidden>
+            <img id="statTeamLogo" class="team-stat__logo" alt="" width="36" height="36" decoding="async" hidden>
             <span id="statTeamLabel">全联盟</span>
           </strong>
         </article>
         <article class="stat">
           <span id="statBestValueLabel">新赛季最超值球员</span>
           <strong class="player-stat">
-            <img id="statBestValueHeadshot" class="player-stat__headshot avatar" alt="" hidden>
+            <img id="statBestValueHeadshot" class="player-stat__headshot avatar" alt="" width="44" height="44" decoding="async" hidden>
             <a id="statBestValueName">--</a>
           </strong>
         </article>
         <article class="stat">
           <span id="statMostOverpaidLabel">新赛季最溢价球员</span>
           <strong class="player-stat">
-            <img id="statMostOverpaidHeadshot" class="player-stat__headshot avatar" alt="" hidden>
+            <img id="statMostOverpaidHeadshot" class="player-stat__headshot avatar" alt="" width="44" height="44" decoding="async" hidden>
             <a id="statMostOverpaidName">--</a>
           </strong>
         </article>
@@ -75,7 +88,7 @@
           <span>球队筛选</span>
           <div id="teamPicker" class="team-picker">
             <button id="teamFilterButton" class="team-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <img id="teamFilterLogo" class="team-picker__logo" alt="" hidden>
+              <img id="teamFilterLogo" class="team-picker__logo" alt="" width="28" height="28" decoding="async" hidden>
               <span id="teamFilterLabel" class="team-picker__label">全联盟</span>
               <span class="team-picker__chevron" aria-hidden="true"></span>
             </button>
@@ -122,9 +135,8 @@
             <h2>薪资价值散点图</h2>
             <p id="chartHelp">新赛季合同价值差为正显示为绿色，反之红色。</p>
             <p class="chart-axis-summary" aria-live="polite">
-              X 轴：<strong id="chartXMetricLabel">新赛季实际薪水</strong>
-              <span aria-hidden="true">｜</span>
-              Y 轴：<strong id="chartYMetricLabel">新赛季合同价值差</strong>
+              <span class="chart-axis-summary__item">X轴:<strong id="chartXMetricLabel">新赛季实际薪水</strong></span>
+              <span class="chart-axis-summary__item">Y轴:<strong id="chartYMetricLabel">新赛季合同价值差</strong></span>
             </p>
           </div>
           <div id="chartShare" class="chart-share">
@@ -144,12 +156,11 @@
 
       <div class="analysis-grid">
         <section class="table-section">
-          <div class="section-heading">
-            <div>
-              <h2>球员薪资数据表</h2>
-              <p>点击列名排序，右侧显示球员分布，上方卡片显示排名</p>
-            </div>
+          <div class="section-heading table-section__heading">
+            <h2>球员薪资数据表</h2>
+            <p>点击列名排序，右(下)侧显示球员分布，顶部卡片显示排名</p>
             <span id="selectedPlayer" class="status-pill">未选中球员</span>
+            <button id="downloadDataButton" class="chart-share__button table-download-button" type="button">下载数据</button>
           </div>
           <div id="salaryTable"></div>
         </section>
@@ -219,6 +230,6 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script type="module" src="./assets/js/main.js?v=20260728-8"></script>
+    <script type="module" src="./assets/js/main.js?v=20260730-5"></script>
   </body>
 </html>

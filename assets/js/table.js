@@ -128,6 +128,7 @@ function tableColumns() {
       width: 74,
       hozAlign: "center",
       headerSort: false,
+      download: false,
       responsive: 1,
       formatter: (cell) => cell.getValue()
         ? `<img class="avatar" src="${cell.getValue()}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'" style="width:38px;height:38px">`
@@ -283,6 +284,16 @@ export function updateTable(selectedPlayerId) {
       syncTableSelection(selectedPlayerId);
     }
   });
+}
+
+export function downloadTableData() {
+  if (!table) return;
+  table.download(
+    "csv",
+    "NBA球员薪资数据.csv",
+    { bom: true },
+    "active",
+  );
 }
 
 export function syncTableSelection(playerId) {

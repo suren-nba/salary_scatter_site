@@ -5,21 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>球员薪资价值百分位</title>
     <meta name="description" content="NBA 球员薪资价值数据与联盟、位置百分位。">
+    <script>
+      (() => {
+        const themes = ["light", "gray", "taupe", "green", "dark"];
+        let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        try {
+          const saved = localStorage.getItem("salary-theme");
+          if (themes.includes(saved)) theme = saved;
+        } catch {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260728-3">
-    <link rel="stylesheet" href="./assets/css/player.css?v=20260728-4">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260730-4">
+    <link rel="stylesheet" href="./assets/css/player.css?v=20260730-4">
+    <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
+    <link rel="modulepreload" href="./assets/js/player.js?v=20260730-4">
   </head>
   <body>
     <header class="topbar">
       <div class="topbar__inner">
         <a class="brand" href="https://www.surennba.com/" target="_blank" rel="noopener noreferrer" aria-label="返回 SuRen NBA 主站">
-          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo">
+          <img src="./assets/brand/sr-logo.png?v=20260728-3" alt="SR Logo" width="635" height="304" decoding="async" fetchpriority="high">
         </a>
         <div class="title-block">
           <h1>NBA 球员薪资价值评估</h1>
         </div>
         <div class="topbar__meta">
-          <span class="source-credit">数据源:微博<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
+          <span class="source-credit">数据源<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a></span>
           <div class="theme-control" title="配色主题：珊瑚浅色">
             <span class="theme-control__label">配色</span>
             <label class="theme-slider">
@@ -55,7 +68,7 @@
       <section class="player-profile" aria-live="polite">
         <header id="playerProfileHeader" class="player-profile__header">
           <div class="player-portrait" id="playerPortraitWrap">
-            <img id="playerPortrait" alt="" hidden>
+            <img id="playerPortrait" alt="" width="112" height="112" decoding="async" fetchpriority="high" hidden>
           </div>
           <div class="player-profile__identity">
             <p id="playerEyebrow">球员薪资价值百分位</p>
@@ -101,6 +114,6 @@
       <p>数据更新于2026/7.26，或有错误，烦请谅解。</p>
     </footer>
 
-    <script type="module" src="./assets/js/player.js?v=20260728-9"></script>
+    <script type="module" src="./assets/js/player.js?v=20260730-4"></script>
   </body>
 </html>

@@ -24,6 +24,12 @@ function setActiveOption(els, option) {
 }
 
 export function setTeamPickerOpen(els, open) {
+  if (open) {
+    els.teamFilterMenu.querySelectorAll("img[data-src]").forEach((logo) => {
+      logo.src = logo.dataset.src;
+      logo.removeAttribute("data-src");
+    });
+  }
   els.teamFilterButton.setAttribute("aria-expanded", String(open));
   els.teamFilterMenu.hidden = !open;
   if (!open) setActiveOption(els, null);
@@ -76,9 +82,12 @@ function makeTeamOption(team) {
 
   if (teamHasLogo(team)) {
     const logo = document.createElement("img");
-    logo.src = teamLogoPath(team);
+    logo.dataset.src = teamLogoPath(team);
     logo.alt = "";
+    logo.width = 28;
+    logo.height = 28;
     logo.loading = "lazy";
+    logo.decoding = "async";
     option.appendChild(logo);
   } else {
     option.classList.add("team-picker__option--no-logo");
@@ -91,10 +100,12 @@ function makeTeamOption(team) {
 }
 
 export function setupTeamPicker(els) {
-  els.teamFilterMenu.appendChild(makeTeamOption("ALL"));
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(makeTeamOption("ALL"));
   const availableTeams = new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean));
-  if (availableTeams.has("NA")) els.teamFilterMenu.appendChild(makeTeamOption("NA"));
+  if (availableTeams.has("NA")) fragment.appendChild(makeTeamOption("NA"));
   const teams = [...availableTeams].filter((team) => team !== "NA").sort();
-  teams.forEach((team) => els.teamFilterMenu.appendChild(makeTeamOption(team)));
+  teams.forEach((team) => fragment.appendChild(makeTeamOption(team)));
+  els.teamFilterMenu.replaceChildren(fragment);
   updateTeamPicker(els);
 }
