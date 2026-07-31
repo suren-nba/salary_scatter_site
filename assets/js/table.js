@@ -8,6 +8,9 @@ import {
 
 let table = null;
 let visibleRowsTimer = null;
+let scopeFilterTimer = null;
+let syncingScopeFilters = false;
+let lastScopeFilters = { team: "ALL", position: "ALL" };
 const metricFields = new Set([
   "epm_expected_salary_m",
   "darko_expected_salary_m",
@@ -190,11 +193,38 @@ function scheduleVisibleRowsChange(callback) {
   visibleRowsTimer = window.setTimeout(() => callback(activePlayerIds()), 0);
 }
 
+function normalizeScopeFilter(value) {
+  return String(value ?? "").trim() || "ALL";
+}
+
+function currentScopeFilters() {
+  const filters = new Map(
+    table.getHeaderFilters().map((filter) => [filter.field, filter.value]),
+  );
+  return {
+    team: normalizeScopeFilter(filters.get("team_abbreviation")),
+    position: normalizeScopeFilter(filters.get("position")),
+  };
+}
+
+function notifyScopeFilterChange(callback) {
+  if (!callback || syncingScopeFilters) return;
+  const next = currentScopeFilters();
+  if (
+    next.team === lastScopeFilters.team
+    && next.position === lastScopeFilters.position
+  ) return;
+  lastScopeFilters = next;
+  window.clearTimeout(scopeFilterTimer);
+  scopeFilterTimer = window.setTimeout(() => callback(next), 0);
+}
+
 export function setupTable(selector, {
   onRowClick,
   onRowHover,
   onMetricSelect,
   onVisibleRowsChange,
+  onScopeFilterChange,
 } = {}) {
   table = new Tabulator(selector, {
     data: state.filtered,
@@ -254,11 +284,46 @@ export function setupTable(selector, {
     scheduleVisibleRowsChange(onVisibleRowsChange);
   });
   table.on("dataProcessed", () => scheduleVisibleRowsChange(onVisibleRowsChange));
-  table.on("dataFiltered", () => scheduleVisibleRowsChange(onVisibleRowsChange));
+  table.on("dataFiltered", () => {
+    notifyScopeFilterChange(onScopeFilterChange);
+    scheduleVisibleRowsChange(onVisibleRowsChange);
+  });
   table.on("dataSorted", () => scheduleVisibleRowsChange(onVisibleRowsChange));
   table.on("pageLoaded", () => scheduleVisibleRowsChange(onVisibleRowsChange));
 
   return table;
+}
+
+export function syncTableScopeFilters(team, position) {
+  if (!table) return;
+  const next = {
+    team: normalizeScopeFilter(team),
+    position: normalizeScopeFilter(position),
+  };
+  if (
+    next.team === lastScopeFilters.team
+    && next.position === lastScopeFilters.position
+  ) return;
+
+  const previous = lastScopeFilters;
+  lastScopeFilters = next;
+  syncingScopeFilters = true;
+  try {
+    if (next.team !== previous.team) {
+      table.setHeaderFilterValue(
+        "team_abbreviation",
+        next.team === "ALL" ? "" : next.team,
+      );
+    }
+    if (next.position !== previous.position) {
+      table.setHeaderFilterValue(
+        "position",
+        next.position === "ALL" ? "" : next.position,
+      );
+    }
+  } finally {
+    syncingScopeFilters = false;
+  }
 }
 
 export function syncBeeswarmMetricHeader(field) {

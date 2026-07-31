@@ -32,8 +32,9 @@ import {
   updateTable,
   syncTableSelection,
   syncBeeswarmMetricHeader,
+  syncTableScopeFilters,
   downloadTableData,
-} from "./table.js?v=20260730-3";
+} from "./table.js?v=20260731-3";
 import {
   initBeeswarm,
   resizeBeeswarm,
@@ -318,9 +319,14 @@ function refresh() {
   scheduleUrlWrite();
 }
 
-function chooseTeam(team) {
+function setSharedScope({
+  team = state.selectedTeam,
+  position = state.selectedPosition,
+  closeTeamPicker = false,
+} = {}) {
   const enteringNoTeam = team === "NA" && state.selectedTeam !== "NA";
   state.selectedTeam = team;
+  state.selectedPosition = position;
   if (enteringNoTeam) {
     state.xMetric = "last_season_actual_salary_m";
     state.yMetric = "last_season_expected_minus_actual_m";
@@ -329,8 +335,14 @@ function chooseTeam(team) {
     syncChartAxisSummary();
   }
   updateTeamPicker(els);
-  setTeamPickerOpen(els, false);
+  els.positionFilter.value = state.selectedPosition;
+  syncTableScopeFilters(state.selectedTeam, state.selectedPosition);
+  if (closeTeamPicker) setTeamPickerOpen(els, false);
   refresh();
+}
+
+function chooseTeam(team) {
+  setSharedScope({ team, closeTeamPicker: true });
 }
 
 function syncThemeSlider() {
@@ -432,8 +444,7 @@ function bindEvents() {
     }
   });
   els.positionFilter.addEventListener("change", () => {
-    state.selectedPosition = els.positionFilter.value;
-    refresh();
+    setSharedScope({ position: els.positionFilter.value });
   });
   els.cardRankingMode.addEventListener("change", () => {
     state.cardRankingMode = els.cardRankingMode.value;
@@ -475,6 +486,7 @@ function bindEvents() {
     updateTeamPicker(els);
     setTeamPickerOpen(els, false);
     els.positionFilter.value = state.selectedPosition;
+    syncTableScopeFilters(state.selectedTeam, state.selectedPosition);
     els.cardRankingMode.value = state.cardRankingMode;
     els.xMetric.value = state.xMetric;
     els.yMetric.value = state.yMetric;
@@ -541,8 +553,12 @@ async function init() {
     onRowHover: hoverPlayer,
     onMetricSelect: selectBeeswarmMetric,
     onVisibleRowsChange: setTableVisiblePlayers,
+    onScopeFilterChange: ({ team, position }) => {
+      setSharedScope({ team, position });
+    },
   });
   tableInstance.on("tableBuilt", () => {
+    syncTableScopeFilters(state.selectedTeam, state.selectedPosition);
     if (state.selectedPlayerId) syncTableSelection(state.selectedPlayerId);
   });
   updateStats();
