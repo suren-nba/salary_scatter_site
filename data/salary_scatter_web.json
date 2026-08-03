@@ -2754,8 +2754,8 @@
   {
     "player_id": 1627780,
     "player_name": "Gary Payton II",
-    "team_name": "无球队",
-    "team_abbreviation": "NA",
+    "team_name": "Golden State Warriors",
+    "team_abbreviation": "GSW",
     "position": "小前锋",
     "epm_expected_salary_m": 0,
     "darko_expected_salary_m": 12.9,
@@ -2763,8 +2763,8 @@
     "last_season_value_salary_m": 13.9,
     "last_season_actual_salary_m": 3.3,
     "last_season_expected_minus_actual_m": 10.6,
-    "actual_salary_m": null,
-    "expected_minus_actual_m": null,
+    "actual_salary_m": 3.88,
+    "expected_minus_actual_m": 9.02,
     "headshot_file": "assets/headshots/1627780.webp"
   },
   {
@@ -6146,8 +6146,8 @@
   {
     "player_id": 1631110,
     "player_name": "Jeremy Sochan",
-    "team_name": "New York Knicks",
-    "team_abbreviation": "NYK",
+    "team_name": "Portland Trail Blazers",
+    "team_abbreviation": "POR",
     "position": "大前锋",
     "epm_expected_salary_m": -1.6,
     "darko_expected_salary_m": 1.8,
@@ -6155,8 +6155,8 @@
     "last_season_value_salary_m": 0.4,
     "last_season_actual_salary_m": 0.8,
     "last_season_expected_minus_actual_m": -0.4,
-    "actual_salary_m": 2.5,
-    "expected_minus_actual_m": -0.7,
+    "actual_salary_m": 2.63,
+    "expected_minus_actual_m": -0.83,
     "headshot_file": "assets/headshots/1631110.webp"
   },
   {
