@@ -7312,22 +7312,6 @@
     "headshot_file": "assets/headshots/1642942.webp"
   },
   {
-    "player_id": 202685,
-    "player_name": "Jonas Valančiūnas",
-    "team_name": "无球队",
-    "team_abbreviation": "NA",
-    "position": "中锋",
-    "epm_expected_salary_m": 0,
-    "darko_expected_salary_m": -0.3,
-    "average_expected_salary_m": -0.3,
-    "last_season_value_salary_m": 9.2,
-    "last_season_actual_salary_m": 10.4,
-    "last_season_expected_minus_actual_m": -1.2,
-    "actual_salary_m": null,
-    "expected_minus_actual_m": null,
-    "headshot_file": "assets/headshots/202685.webp"
-  },
-  {
     "player_id": 1628502,
     "player_name": "Nigel Hayes-Davis",
     "team_name": "无球队",
