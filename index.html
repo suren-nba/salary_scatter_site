@@ -18,7 +18,7 @@
     </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260730-4">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260806-3">
     <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
     <link rel="modulepreload" href="./assets/js/main.js?v=20260731-3">
   </head>
@@ -181,43 +181,61 @@
 
       <section class="notes">
         <h2>数据指标说明</h2>
-        <div class="notes-grid">
-          <article class="note-full">
-            <h3>无球队</h3>
-            <p>无球队指的是该球员尚未签约下家，为完全自由球员、受限制自由球员或存在其他未签约原因。数据若有误可私信<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a> &amp; <a href="https://weibo.com/u/7488309624" target="_blank" rel="noopener noreferrer">俗人</a>。</p>
-          </article>
-          <article>
-            <h3>EPM预测薪水</h3>
-            <p>基于 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill" target="_blank" rel="noopener noreferrer">Dunksandthrees</a> 统计的球员上赛季常规赛出勤与预测版 EPM 预估表现换算的薪资估计，单位为百万美元。若无数据，指该球员上赛季出勤可信度低。</p>
-          </article>
-          <article>
-            <h3>DARKO预测薪水</h3>
-            <p>基于 <a href="https://www.darko.app/" target="_blank" rel="noopener noreferrer">DARKO</a> 预测系统直接计算的球员下赛季综合表现换算的薪资估计，单位为百万美元。若无数据，指 DARKO 未统计该球员数据。</p>
-          </article>
-          <article>
-            <h3>综合预测薪水</h3>
-            <p>EPM 预测薪水与 DARKO 预测薪水的简单平均。预测球员在新赛季打出的综合贡献能换算成多少工资</p>
-          </article>
-          <article>
-            <h3>新赛季实际薪水</h3>
-            <p>即 NBA 2026-27 赛季的实际薪资，单位为百万美元。若无数据，指该球员详细合同薪水未披露。</p>
-          </article>
-          <article class="wide-note">
-            <h3>新赛季合同价值差</h3>
-            <p><strong>新赛季合同价值差 = 综合预测薪水 − 新赛季实际薪水。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，新赛季合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，新赛季合同可能存在溢价。但该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
-          </article>
-          <article>
-            <h3>上赛季表现薪水</h3>
-            <p>基于上赛季常规赛<a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill&amp;m=ewins" target="_blank" rel="noopener noreferrer">EPM Wins</a> 累计贡献，即根据上赛季综合表现价值换算的薪资参考。</p>
-          </article>
-          <article>
-            <h3>上赛季实际薪水</h3>
-            <p>即 NBA 2025-26 赛季的实际薪资，单位为百万美元。若无数据，指该球员通常为底薪或双向合同。</p>
-          </article>
-          <article class="note-full">
-            <h3>上赛季合同价值差</h3>
-            <p><strong>上赛季合同价值差 = 上赛季表现薪水 − 上赛季实际薪水。</strong> 合同价值差为正，表示球员上赛季的表现换算价值高于实际薪资，上赛季合同相对具有性价比；合同价值差为负，表示球员上赛季实际薪资高于表现换算价值，上赛季合同可能存在溢价。</p>
-          </article>
+        <div class="notes-accordion">
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>无球队</summary>
+            <div class="notes-accordion__content"><div>
+              <p>无球队指的是该球员尚未签约下家，为完全自由球员、受限制自由球员或存在其他未签约原因。数据若有误可私信<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a> &amp; <a href="https://weibo.com/u/7488309624" target="_blank" rel="noopener noreferrer">俗人</a>。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>EPM预测薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>基于 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill" target="_blank" rel="noopener noreferrer">Dunksandthrees</a> 统计的球员上赛季常规赛出勤与预测版 EPM 预估表现换算的薪资估计，单位为百万美元。若无数据，指该球员上赛季出勤可信度低。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>DARKO预测薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>基于 <a href="https://www.darko.app/" target="_blank" rel="noopener noreferrer">DARKO</a> 预测系统直接计算的球员下赛季综合表现换算的薪资估计，单位为百万美元。若无数据，指 DARKO 未统计该球员数据。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>综合预测薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>EPM 预测薪水与 DARKO 预测薪水的简单平均。预测球员在新赛季打出的综合贡献能换算成多少工资。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>新赛季实际薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>即 NBA 2026-27 赛季的实际薪资，单位为百万美元。若无数据，指该球员详细合同薪水未披露。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>新赛季合同价值差</summary>
+            <div class="notes-accordion__content"><div>
+              <p><strong>新赛季合同价值差 = 综合预测薪水 − 新赛季实际薪水。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，新赛季合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，新赛季合同可能存在溢价。但该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>上赛季表现薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>基于上赛季常规赛<a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill&amp;m=ewins" target="_blank" rel="noopener noreferrer">EPM Wins</a> 累计贡献，即根据上赛季综合表现价值换算的薪资参考。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>上赛季实际薪水</summary>
+            <div class="notes-accordion__content"><div>
+              <p>即 NBA 2025-26 赛季的实际薪资，单位为百万美元。若无数据，指该球员通常为底薪或双向合同。</p>
+            </div></div>
+          </details>
+          <details class="notes-accordion__item" name="metric-notes">
+            <summary>上赛季合同价值差</summary>
+            <div class="notes-accordion__content"><div>
+              <p><strong>上赛季合同价值差 = 上赛季表现薪水 − 上赛季实际薪水。</strong> 合同价值差为正，表示球员上赛季的表现换算价值高于实际薪资，上赛季合同相对具有性价比；合同价值差为负，表示球员上赛季实际薪资高于表现换算价值，上赛季合同可能存在溢价。</p>
+            </div></div>
+          </details>
         </div>
         <p class="methodology-link">所有数据的具体算法说明：<a href="https://weibo.com/ttarticle/p/show?id=2309405316644200644649" target="_blank" rel="noopener noreferrer">查看微博原文</a></p>
       </section>
@@ -228,8 +246,35 @@
       <p>数据更新于2026/7.26，或有错误，烦请谅解。</p>
     </footer>
 
+    <nav class="site-dock" aria-label="页面导航">
+      <div class="site-dock__panel">
+        <a class="site-dock__item" href="./index.html" aria-label="首页" aria-current="page" data-dock-item>
+          <span class="site-dock__label" aria-hidden="true">首页</span>
+          <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 11 9-8 9 8"></path>
+            <path d="M5 10v10h14V10"></path>
+            <path d="M9 20v-6h6v6"></path>
+          </svg>
+        </a>
+        <a class="site-dock__item" href="./player.html" aria-label="球员页面" data-dock-item>
+          <span class="site-dock__label" aria-hidden="true">球员</span>
+          <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M4 21a8 8 0 0 1 16 0"></path>
+          </svg>
+        </a>
+        <button class="site-dock__item" type="button" aria-label="切换配色主题" data-dock-theme data-dock-item>
+          <span class="site-dock__label" aria-hidden="true">主题</span>
+          <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
     <script type="module" src="./assets/js/main.js?v=20260731-3"></script>
+    <script type="module" src="./assets/js/dock.js?v=20260806-1"></script>
   </body>
 </html>

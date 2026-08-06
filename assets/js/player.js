@@ -478,15 +478,25 @@ function renderPlayer() {
   setShareMenuOpen(false);
   const player = selectedPlayer();
   if (!player) {
-    els.name.textContent = "没有找到球员";
+    document.title = "球员薪资价值百分位";
+    els.eyebrow.textContent = "球员薪资价值百分位";
+    els.name.textContent = "请选择球员";
     els.meta.innerHTML = "";
-    els.metricGroups.innerHTML = '<p class="player-empty">当前筛选中没有可显示的球员。</p>';
+    els.benchmarkLabel.textContent = "全联盟百分位";
+    els.benchmarkCount.textContent = "--";
+    els.metricGroups.innerHTML = '<p class="player-empty">请先通过球队和球员筛选选择一名球员。</p>';
+    if (els.shareButton) els.shareButton.disabled = true;
     els.portrait.hidden = true;
     els.portraitWrap.classList.add("player-portrait--empty");
     els.profileHeader.classList.add("player-profile__header--no-portrait");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    url.searchParams.delete("scope");
+    history.replaceState(null, "", `${url.pathname}${url.search}`);
     return;
   }
 
+  if (els.shareButton) els.shareButton.disabled = false;
   document.title = `${player.player_name} · 球员薪资价值百分位`;
   els.name.textContent = player.player_name;
   els.eyebrow.textContent = state.scope === "league" ? "全联盟薪资价值百分位" : `${player.position}球员薪资价值百分位`;
@@ -538,10 +548,11 @@ function populateTeamFilter() {
 function populatePlayerFilter(preferredPlayerId = state.selectedPlayerId) {
   const players = playerOptions();
   els.playerFilter.replaceChildren(
+    new Option("请选择球员", ""),
     ...players.map((player) => new Option(player.player_name, String(player.player_id))),
   );
   const preferred = players.find((player) => player.player_id === preferredPlayerId);
-  state.selectedPlayerId = preferred?.player_id ?? players[0]?.player_id ?? null;
+  state.selectedPlayerId = preferred?.player_id ?? null;
   els.playerFilter.value = state.selectedPlayerId ? String(state.selectedPlayerId) : "";
 }
 
@@ -617,7 +628,7 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const requestedId = Number(params.get("id"));
   const requestedPlayer = state.data.find((row) => row.player_id === requestedId);
-  state.selectedPlayerId = requestedPlayer?.player_id ?? state.data[0]?.player_id ?? null;
+  state.selectedPlayerId = requestedPlayer?.player_id ?? null;
   state.selectedTeam = requestedPlayer?.team_abbreviation || "ALL";
   state.scope = params.get("scope") === "position" ? "position" : "league";
 
