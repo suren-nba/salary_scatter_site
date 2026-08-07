@@ -13,7 +13,7 @@ import {
   getThemeLabel,
   initTheme,
   setThemeByIndex,
-} from "./theme.js?v=20260728-3";
+} from "./theme.js?v=20260807-3";
 import {
   getActiveOption,
   moveActiveOption,
@@ -250,8 +250,6 @@ async function createPlayerShareBlob() {
   const context = canvas.getContext("2d");
   context.fillStyle = colors.panel;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = colors.topbar;
-  context.fillRect(0, 0, canvas.width, 18);
 
   let titleX = 90;
   if (player.headshot_file) {
@@ -292,11 +290,11 @@ async function createPlayerShareBlob() {
   context.fillStyle = colors.muted;
   context.font = `800 17px ${colors.bodyFont}`;
   context.textAlign = "left";
-  context.fillText("低位", 390, 244);
+  context.fillText("弱", 390, 244);
   context.textAlign = "center";
-  context.fillText("中位", 790, 244);
+  context.fillText("中", 790, 244);
   context.textAlign = "right";
-  context.fillText("高位", 1190, 244);
+  context.fillText("强", 1190, 244);
 
   context.textAlign = "left";
   context.fillStyle = colors.ink;
@@ -688,10 +686,12 @@ function bindEvents() {
       renderPlayer();
     });
   });
-  els.themeSlider.addEventListener("input", () => {
-    setThemeByIndex(Number(els.themeSlider.value));
+  window.addEventListener("salary-theme-change", () => {
     syncThemeSlider();
     setShareMenuOpen(false);
+  });
+  els.themeSlider.addEventListener("input", () => {
+    setThemeByIndex(Number(els.themeSlider.value));
   });
   els.portrait.addEventListener("error", () => {
     els.portrait.hidden = true;
@@ -701,7 +701,7 @@ function bindEvents() {
 }
 
 async function init() {
-  initTheme(syncThemeSlider);
+  initTheme();
   syncThemeSlider();
   const response = await fetch(
     document.getElementById("salaryDataPreload").href,

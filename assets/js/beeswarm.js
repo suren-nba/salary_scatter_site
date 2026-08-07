@@ -9,7 +9,7 @@ import {
   numberFontFamily,
   teamDisplayName,
 } from "./format.js?v=20260728-6";
-import { getTheme } from "./theme.js?v=20260728-6";
+import { getTheme } from "./theme.js?v=20260807-3";
 
 let chart = null;
 let chartEl = null;

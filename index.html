@@ -7,7 +7,11 @@
     <meta name="description" content="NBA 球员薪资价值评估与可视化。">
     <script>
       (() => {
-        const themes = ["light", "gray", "taupe", "green", "dark"];
+        if (location.pathname.endsWith("/index.html")) {
+          const canonicalPath = location.pathname.slice(0, -"index.html".length);
+          history.replaceState(history.state, "", `${canonicalPath}${location.search}${location.hash}`);
+        }
+        const themes = ["light", "gray", "cream", "green", "dark"];
         let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
           const saved = localStorage.getItem("salary-theme");
@@ -18,9 +22,9 @@
     </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260807-2">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260807-9">
     <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
-    <link rel="modulepreload" href="./assets/js/main.js?v=20260807-1">
+    <link rel="modulepreload" href="./assets/js/main.js?v=20260807-6">
   </head>
   <body>
     <header class="topbar">
@@ -70,15 +74,15 @@
           </strong>
         </article>
         <article class="stat stat-metric-card">
-          <span id="statXMetricLabel">X轴指标 · 新赛季实际薪水</span>
+          <span>X轴指标 · <button id="statXMetricLabel" class="stat-metric-link" type="button" aria-label="查看新赛季实际薪水指标说明">新赛季实际薪水</button></span>
           <strong id="statActual" class="stat-metric-value">--</strong>
         </article>
         <article class="stat stat-metric-card">
-          <span id="statYMetricLabel">Y轴指标 · 新赛季合同价值差</span>
+          <span>Y轴指标 · <button id="statYMetricLabel" class="stat-metric-link" type="button" aria-label="查看新赛季合同价值差指标说明">新赛季合同价值差</button></span>
           <strong id="statExpected" class="stat-metric-value">--</strong>
         </article>
         <article class="stat stat-metric-card">
-          <span id="statMetricLabel">表格列指标 · 综合预测薪水</span>
+          <span>表格列指标 · <button id="statMetricLabel" class="stat-metric-link" type="button" aria-label="查看综合预测薪水指标说明">综合预测薪水</button></span>
           <strong id="statSurplus" class="stat-metric-value">--</strong>
         </article>
       </section>
@@ -140,8 +144,8 @@
             <h2>薪资价值散点图</h2>
             <p id="chartHelp">新赛季合同价值差为正显示为绿色，反之红色。</p>
             <p class="chart-axis-summary" aria-live="polite">
-              <span class="chart-axis-summary__item">X轴:<strong id="chartXMetricLabel">新赛季实际薪水</strong></span>
-              <span class="chart-axis-summary__item">Y轴:<strong id="chartYMetricLabel">新赛季合同价值差</strong></span>
+              <span class="chart-axis-summary__item">X轴:<button id="chartXMetricLabel" class="chart-axis-summary__link" type="button" aria-label="查看新赛季实际薪水指标说明">新赛季实际薪水</button></span>
+              <span class="chart-axis-summary__item">Y轴:<button id="chartYMetricLabel" class="chart-axis-summary__link" type="button" aria-label="查看新赛季合同价值差指标说明">新赛季合同价值差</button></span>
             </p>
           </div>
           <div id="chartShare" class="chart-share">
@@ -217,49 +221,49 @@
               <p>无球队指的是该球员尚未签约下家，为完全自由球员、受限制自由球员或存在其他未签约原因。数据若有误可私信<a href="https://weibo.com/u/1894121447" target="_blank" rel="noopener noreferrer">库昊</a> &amp; <a href="https://weibo.com/u/7488309624" target="_blank" rel="noopener noreferrer">俗人</a>。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="epm_expected_salary_m">
             <summary>EPM预测薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>基于 <a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill" target="_blank" rel="noopener noreferrer">Dunksandthrees</a> 统计的球员上赛季常规赛出勤与预测版 EPM 预估表现换算的薪资估计，单位为百万美元。若无数据，指该球员上赛季出勤可信度低。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="darko_expected_salary_m">
             <summary>DARKO预测薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>基于 <a href="https://www.darko.app/" target="_blank" rel="noopener noreferrer">DARKO</a> 预测系统直接计算的球员下赛季综合表现换算的薪资估计，单位为百万美元。若无数据，指 DARKO 未统计该球员数据。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="average_expected_salary_m">
             <summary>综合预测薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>EPM 预测薪水与 DARKO 预测薪水的简单平均。预测球员在新赛季打出的综合贡献能换算成多少工资。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="actual_salary_m">
             <summary>新赛季实际薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>即 NBA 2026-27 赛季的实际薪资，单位为百万美元。若无数据，指该球员详细合同薪水未披露。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="expected_minus_actual_m">
             <summary>新赛季合同价值差</summary>
             <div class="notes-accordion__content"><div>
               <p><strong>新赛季合同价值差 = 综合预测薪水 − 新赛季实际薪水。</strong> 合同价值差为正，表示模型平均估值高于球员实际薪资，新赛季合同相对具有性价比；合同价值差为负，表示球员实际薪资高于模型平均估值，新赛季合同可能存在溢价。但该结果仅用于数据可视化和模型比较，不代表真实交易价值或正式薪资建议。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="last_season_value_salary_m">
             <summary>上赛季表现薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>基于上赛季常规赛<a href="https://dunksandthrees.com/epm/actual?heatmapStyle=fill&amp;m=ewins" target="_blank" rel="noopener noreferrer">EPM Wins</a> 累计贡献，即根据上赛季综合表现价值换算的薪资参考。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="last_season_actual_salary_m">
             <summary>上赛季实际薪水</summary>
             <div class="notes-accordion__content"><div>
               <p>即 NBA 2025-26 赛季的实际薪资，单位为百万美元。若无数据，指该球员通常为底薪或双向合同。</p>
             </div></div>
           </details>
-          <details class="notes-accordion__item" name="metric-notes">
+          <details class="notes-accordion__item" name="metric-notes" data-metric="last_season_expected_minus_actual_m">
             <summary>上赛季合同价值差</summary>
             <div class="notes-accordion__content"><div>
               <p><strong>上赛季合同价值差 = 上赛季表现薪水 − 上赛季实际薪水。</strong> 合同价值差为正，表示球员上赛季的表现换算价值高于实际薪资，上赛季合同相对具有性价比；合同价值差为负，表示球员上赛季实际薪资高于表现换算价值，上赛季合同可能存在溢价。</p>
@@ -277,14 +281,14 @@
 
     <nav class="site-dock" aria-label="页面导航">
       <div class="site-dock__panel">
-        <a class="site-dock__item" href="./index.html" aria-label="首页" aria-current="page" data-dock-item>
+        <button class="site-dock__item" type="button" aria-label="首页，当前页面" aria-current="page" data-dock-home data-dock-item>
           <span class="site-dock__label" aria-hidden="true">首页</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="m3 11 9-8 9 8"></path>
             <path d="M5 10v10h14V10"></path>
             <path d="M9 20v-6h6v6"></path>
           </svg>
-        </a>
+        </button>
         <a class="site-dock__item" href="./player.html" aria-label="球员页面" data-dock-item>
           <span class="site-dock__label" aria-hidden="true">球员</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -295,7 +299,11 @@
         <button class="site-dock__item" type="button" aria-label="切换配色主题" data-dock-theme data-dock-item>
           <span class="site-dock__label" aria-hidden="true">主题</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            <path d="M12 2a10 10 0 0 0 0 20h1.65c1.36 0 2.04-1.64 1.08-2.6l-.49-.49a2 2 0 0 1 1.42-3.41H18a4 4 0 0 0 4-4C22 6.26 17.52 2 12 2Z"></path>
+            <circle cx="8.5" cy="7.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="13.5" cy="6.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="17.5" cy="10.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="6.5" cy="12.5" r=".75" fill="currentColor" stroke="none"></circle>
           </svg>
         </button>
       </div>
@@ -303,7 +311,7 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script type="module" src="./assets/js/main.js?v=20260807-1"></script>
-    <script type="module" src="./assets/js/dock.js?v=20260806-1"></script>
+    <script type="module" src="./assets/js/main.js?v=20260807-6"></script>
+    <script type="module" src="./assets/js/dock.js?v=20260807-6"></script>
   </body>
 </html>

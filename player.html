@@ -7,7 +7,7 @@
     <meta name="description" content="NBA 球员薪资价值数据与联盟、位置百分位。">
     <script>
       (() => {
-        const themes = ["light", "gray", "taupe", "green", "dark"];
+        const themes = ["light", "gray", "cream", "green", "dark"];
         let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
           const saved = localStorage.getItem("salary-theme");
@@ -17,10 +17,10 @@
       })();
     </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260807-2">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260807-9">
     <link rel="stylesheet" href="./assets/css/player.css?v=20260807-1">
     <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
-    <link rel="modulepreload" href="./assets/js/player.js?v=20260807-2">
+    <link rel="modulepreload" href="./assets/js/player.js?v=20260807-6">
   </head>
   <body>
     <header class="topbar">
@@ -41,7 +41,7 @@
               <span class="theme-slider__endpoint theme-slider__endpoint--dark" aria-hidden="true"></span>
             </label>
           </div>
-          <a href="./index.html">返回薪资总览</a>
+          <a href="./">返回薪资总览</a>
         </div>
       </div>
     </header>
@@ -147,7 +147,7 @@
 
     <nav class="site-dock" aria-label="页面导航">
       <div class="site-dock__panel">
-        <a class="site-dock__item" href="./index.html" aria-label="首页" data-dock-item>
+        <a class="site-dock__item" href="./" aria-label="首页" data-dock-home data-dock-item>
           <span class="site-dock__label" aria-hidden="true">首页</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="m3 11 9-8 9 8"></path>
@@ -155,23 +155,27 @@
             <path d="M9 20v-6h6v6"></path>
           </svg>
         </a>
-        <a class="site-dock__item" href="./player.html" aria-label="球员页面" aria-current="page" data-dock-item>
+        <button class="site-dock__item" type="button" aria-label="球员页面，当前页面" aria-current="page" data-dock-item>
           <span class="site-dock__label" aria-hidden="true">球员</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="7" r="4"></circle>
             <path d="M4 21a8 8 0 0 1 16 0"></path>
           </svg>
-        </a>
+        </button>
         <button class="site-dock__item" type="button" aria-label="切换配色主题" data-dock-theme data-dock-item>
           <span class="site-dock__label" aria-hidden="true">主题</span>
           <svg class="site-dock__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            <path d="M12 2a10 10 0 0 0 0 20h1.65c1.36 0 2.04-1.64 1.08-2.6l-.49-.49a2 2 0 0 1 1.42-3.41H18a4 4 0 0 0 4-4C22 6.26 17.52 2 12 2Z"></path>
+            <circle cx="8.5" cy="7.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="13.5" cy="6.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="17.5" cy="10.5" r=".75" fill="currentColor" stroke="none"></circle>
+            <circle cx="6.5" cy="12.5" r=".75" fill="currentColor" stroke="none"></circle>
           </svg>
         </button>
       </div>
     </nav>
 
-    <script type="module" src="./assets/js/player.js?v=20260807-2"></script>
-    <script type="module" src="./assets/js/dock.js?v=20260806-1"></script>
+    <script type="module" src="./assets/js/player.js?v=20260807-6"></script>
+    <script type="module" src="./assets/js/dock.js?v=20260807-6"></script>
   </body>
 </html>

@@ -432,10 +432,6 @@
     white-space: nowrap;
   }
 
-  .topbar__meta .theme-control {
-    justify-self: start;
-  }
-
   .percentile-scope {
     grid-column: auto;
   }

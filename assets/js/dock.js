@@ -3,12 +3,12 @@ import {
   getThemeIndex,
   getThemeLabel,
   setThemeByIndex,
-} from "./theme.js?v=20260728-6";
+} from "./theme.js?v=20260807-3";
 
 const panel = document.querySelector(".site-dock__panel");
 const items = panel ? [...panel.querySelectorAll("[data-dock-item]")] : [];
 const themeButton = panel?.querySelector("[data-dock-theme]");
-const themeSlider = document.getElementById("themeSlider");
+const homeLink = panel?.querySelector("[data-dock-home]");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function resetMagnification() {
@@ -45,15 +45,24 @@ if (panel) {
 
 if (themeButton) {
   themeButton.addEventListener("click", () => {
-    const nextIndex = (getThemeIndex() + 1) % 5;
-    setThemeByIndex(nextIndex);
-
-    if (themeSlider) {
-      themeSlider.value = String(nextIndex);
-      themeSlider.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-
+    setThemeByIndex((getThemeIndex() + 1) % 5);
     syncThemeButton();
+  });
+}
+
+if (homeLink && location.pathname.endsWith("/player.html")) {
+  homeLink.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!document.referrer) return;
+
+    const referrer = new URL(document.referrer);
+    const siteDirectory = location.pathname.slice(0, -"player.html".length);
+    const cameFromHome = referrer.origin === location.origin
+      && (referrer.pathname === siteDirectory || referrer.pathname === `${siteDirectory}index.html`);
+    if (!cameFromHome || history.length <= 1) return;
+
+    event.preventDefault();
+    history.back();
   });
 }
 

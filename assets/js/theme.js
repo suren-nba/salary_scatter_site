@@ -1,10 +1,10 @@
 const STORAGE_KEY = "salary-theme";
 const media = window.matchMedia("(prefers-color-scheme: dark)");
-const THEMES = ["light", "gray", "taupe", "green", "dark"];
+const THEMES = ["light", "gray", "cream", "green", "dark"];
 const THEME_LABELS = {
   light: "珊瑚浅色",
   gray: "灰色",
-  taupe: "暖棕色",
+  cream: "奶油色",
   green: "墨绿色",
   dark: "曜黑色",
 };
@@ -20,19 +20,25 @@ export function getTheme() {
   return THEMES.includes(explicit) ? explicit : systemTheme();
 }
 
-export function initTheme(onSystemChange) {
+function emitThemeChange(theme) {
+  window.dispatchEvent(new CustomEvent("salary-theme-change", { detail: { theme } }));
+}
+
+export function initTheme() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (THEMES.includes(saved)) {
     followsSystem = false;
     document.documentElement.dataset.theme = saved;
   } else {
     followsSystem = true;
+    if (saved !== null) localStorage.removeItem(STORAGE_KEY);
     document.documentElement.dataset.theme = systemTheme();
   }
   media.addEventListener("change", () => {
     if (!followsSystem) return;
-    document.documentElement.dataset.theme = systemTheme();
-    if (onSystemChange) onSystemChange(getTheme());
+    const theme = systemTheme();
+    document.documentElement.dataset.theme = theme;
+    emitThemeChange(theme);
   });
   return getTheme();
 }
@@ -42,6 +48,7 @@ export function setTheme(theme) {
   followsSystem = false;
   document.documentElement.dataset.theme = theme;
   localStorage.setItem(STORAGE_KEY, theme);
+  emitThemeChange(theme);
   return theme;
 }
 

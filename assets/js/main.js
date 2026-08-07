@@ -39,8 +39,8 @@ import {
   initBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260728-8";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260728-6";
+} from "./beeswarm.js?v=20260807-2";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260807-3";
 import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-6";
 
 const els = {
@@ -93,6 +93,7 @@ let hoverFrame;
 let shareBlob = null;
 let sharePrepareToken = 0;
 const shareActionResetTimers = new Map();
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const rankingModeLabels = {
   average: "平均",
   median: "中位数",
@@ -175,12 +176,12 @@ function updateStats() {
     els.statMostOverpaidHeadshot,
     els.statMostOverpaidName,
   );
-  els.statXMetricLabel.textContent = `X轴指标 · ${metricLabels[state.xMetric]}`;
-  els.statYMetricLabel.textContent = `Y轴指标 · ${metricLabels[state.yMetric]}`;
+  syncMetricNoteLink(els.statXMetricLabel, state.xMetric);
+  syncMetricNoteLink(els.statYMetricLabel, state.yMetric);
   els.statActual.innerHTML = metricAggregateHtml(rows, state.xMetric);
   els.statExpected.innerHTML = metricAggregateHtml(rows, state.yMetric);
   const activeMetric = state.beeswarmMetric;
-  els.statMetricLabel.textContent = `表格列指标 · ${metricLabels[activeMetric]}`;
+  syncMetricNoteLink(els.statMetricLabel, activeMetric);
   els.statSurplus.innerHTML = metricAggregateHtml(rows, activeMetric);
 }
 
@@ -377,9 +378,31 @@ function syncThemeSlider() {
   els.themeSlider.closest(".theme-control").title = `配色主题：${label}`;
 }
 
+function syncMetricNoteLink(button, metric) {
+  const label = metricLabels[metric];
+  button.textContent = label;
+  button.setAttribute("aria-label", `查看${label}指标说明`);
+}
+
 function syncChartAxisSummary() {
-  els.chartXMetricLabel.textContent = metricLabels[state.xMetric];
-  els.chartYMetricLabel.textContent = metricLabels[state.yMetric];
+  syncMetricNoteLink(els.chartXMetricLabel, state.xMetric);
+  syncMetricNoteLink(els.chartYMetricLabel, state.yMetric);
+}
+
+function openMetricNote(metric) {
+  const note = [...document.querySelectorAll(".notes-accordion__item[data-metric]")]
+    .find((item) => item.dataset.metric === metric);
+  if (!note) return;
+
+  document.querySelectorAll(".notes-accordion__item[open]").forEach((item) => {
+    if (item !== note) item.open = false;
+  });
+  note.open = true;
+  note.querySelector("summary")?.focus({ preventScroll: true });
+  note.scrollIntoView({
+    behavior: reduceMotion.matches ? "auto" : "smooth",
+    block: "center",
+  });
 }
 
 function setupSelects() {
@@ -395,6 +418,11 @@ function setupSelects() {
 }
 
 function bindEvents() {
+  els.statXMetricLabel.addEventListener("click", () => openMetricNote(state.xMetric));
+  els.statYMetricLabel.addEventListener("click", () => openMetricNote(state.yMetric));
+  els.statMetricLabel.addEventListener("click", () => openMetricNote(state.beeswarmMetric));
+  els.chartXMetricLabel.addEventListener("click", () => openMetricNote(state.xMetric));
+  els.chartYMetricLabel.addEventListener("click", () => openMetricNote(state.yMetric));
   els.chartShareButton.addEventListener("click", () => {
     setShareMenuOpen(els.chartShareButton.getAttribute("aria-expanded") !== "true");
   });
@@ -529,11 +557,14 @@ function bindEvents() {
     syncBeeswarmMetricHeader(state.beeswarmMetric);
     refresh();
   });
-  els.themeSlider.addEventListener("input", () => {
-    setThemeByIndex(Number(els.themeSlider.value));
+  window.addEventListener("salary-theme-change", () => {
     syncThemeSlider();
+    setShareMenuOpen(false);
     updateChart();
     updateBeeswarm();
+  });
+  els.themeSlider.addEventListener("input", () => {
+    setThemeByIndex(Number(els.themeSlider.value));
   });
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
@@ -559,11 +590,7 @@ async function init() {
   if (!window.echarts || !window.Tabulator) {
     throw new Error("ECharts or Tabulator did not load.");
   }
-  initTheme(() => {
-    syncThemeSlider();
-    updateChart();
-    updateBeeswarm();
-  });
+  initTheme();
   syncThemeSlider();
 
   const data = await fetchJson();

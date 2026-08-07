@@ -64,22 +64,22 @@
   --shadow: 0 18px 42px rgba(43, 51, 38, 0.20);
 }
 
-:root[data-theme="taupe"] {
+:root[data-theme="cream"] {
   color-scheme: light;
-  --ink: #4C4137;
-  --panel: #F4F1EA;
-  --paper: #C9B8A8;
-  --dark: #7A6A58;
-  --line: rgba(76, 65, 55, 0.18);
-  --muted: #74685E;
-  --avatar-bg: rgba(76, 65, 55, 0.08);
-  --table-head-bg: #E8E1D7;
-  --input-bg: #FBF9F5;
-  --topbar-ink: floralwhite;
-  --accent-tint: rgba(122, 106, 88, 0.10);
-  --accent-tint-strong: rgba(122, 106, 88, 0.16);
-  --action-ink: #fffaf0;
-  --shadow: 0 18px 42px rgba(76, 65, 55, 0.18);
+  --ink: #312520;
+  --panel: #FEFFEF;
+  --paper: #FEFCD4;
+  --dark: #312520;
+  --line: rgba(49, 37, 32, 0.18);
+  --muted: #6F625C;
+  --avatar-bg: rgba(49, 37, 32, 0.08);
+  --table-head-bg: #F4F1C9;
+  --input-bg: #FEFFEF;
+  --topbar-ink: #FEFFEF;
+  --accent-tint: rgba(49, 37, 32, 0.10);
+  --accent-tint-strong: rgba(49, 37, 32, 0.16);
+  --action-ink: #FEFFEF;
+  --shadow: 0 18px 42px rgba(49, 37, 32, 0.18);
 }
 
 :root[data-theme="dark"] {
@@ -837,6 +837,38 @@ main {
 
 .chart-axis-summary strong {
   color: var(--ink);
+}
+
+.chart-axis-summary__link,
+.stat-metric-link {
+  appearance: none;
+  display: inline;
+  margin: 0;
+  border: 0;
+  border-radius: 3px;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  vertical-align: baseline;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, currentColor 54%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.chart-axis-summary__link:hover,
+.stat-metric-link:hover {
+  text-decoration-style: solid;
+}
+
+.chart-axis-summary__link:focus-visible,
+.stat-metric-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dark) 42%, transparent);
+  outline-offset: 3px;
 }
 
 @media (max-width: 560px) {
