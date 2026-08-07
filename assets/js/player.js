@@ -14,6 +14,14 @@ import {
   initTheme,
   setThemeByIndex,
 } from "./theme.js?v=20260728-3";
+import {
+  getActiveOption,
+  moveActiveOption,
+  setActiveOptionEdge,
+  setTeamPickerOpen,
+  setupTeamPicker,
+  updateTeamPicker,
+} from "./teamPicker.js?v=20260807-1";
 
 const state = {
   data: [],
@@ -23,7 +31,11 @@ const state = {
 };
 
 const els = {
-  teamFilter: document.getElementById("playerTeamFilter"),
+  teamPicker: document.getElementById("playerTeamPicker"),
+  teamFilterButton: document.getElementById("playerTeamFilterButton"),
+  teamFilterLogo: document.getElementById("playerTeamFilterLogo"),
+  teamFilterLabel: document.getElementById("playerTeamFilterLabel"),
+  teamFilterMenu: document.getElementById("playerTeamFilterMenu"),
   playerFilter: document.getElementById("playerFilter"),
   scopeButtons: [...document.querySelectorAll("[data-scope]")],
   profileHeader: document.getElementById("playerProfileHeader"),
@@ -44,6 +56,7 @@ const els = {
 
 let shareBlob = null;
 let sharePrepareToken = 0;
+const shareActionResetTimers = new Map();
 
 const metricGroups = [
   {
@@ -336,6 +349,28 @@ function setShareActionsDisabled(disabled) {
   });
 }
 
+function resetShareActionState(button) {
+  window.clearTimeout(shareActionResetTimers.get(button));
+  shareActionResetTimers.delete(button);
+  button.dataset.state = "idle";
+  button.removeAttribute("aria-label");
+}
+
+function resetShareActionStates() {
+  els.shareMenu?.querySelectorAll("[data-player-share-action]").forEach(resetShareActionState);
+}
+
+function setShareActionState(button, status, message, { autoReset = true } = {}) {
+  window.clearTimeout(shareActionResetTimers.get(button));
+  button.dataset.state = status;
+  const label = button.querySelector(".share-action__label")?.textContent || "分享操作";
+  button.setAttribute("aria-label", `${label}：${message}`);
+  els.shareFeedback.textContent = message;
+  if (!autoReset || (status !== "success" && status !== "error")) return;
+  const timer = window.setTimeout(() => resetShareActionState(button), 3000);
+  shareActionResetTimers.set(button, timer);
+}
+
 function setShareMenuOpen(open) {
   if (!els.shareButton || !els.shareMenu || !els.shareFeedback) return;
   els.shareButton.setAttribute("aria-expanded", String(open));
@@ -346,6 +381,7 @@ function setShareMenuOpen(open) {
     els.shareFeedback.textContent = "";
     return;
   }
+  resetShareActionStates();
   const token = ++sharePrepareToken;
   setShareActionsDisabled(true);
   els.shareFeedback.textContent = "正在准备图片…";
@@ -358,7 +394,9 @@ function setShareMenuOpen(open) {
     })
     .catch(() => {
       if (token !== sharePrepareToken) return;
-      els.shareFeedback.textContent = "图片生成失败，请重试";
+      els.shareMenu.querySelectorAll("[data-player-share-action]").forEach((button) => {
+        setShareActionState(button, "error", "图片生成失败，请重新打开分享菜单重试", { autoReset: false });
+      });
     });
 }
 
@@ -372,7 +410,7 @@ async function copyShareImage() {
 }
 
 async function runShareAction(action) {
-  if (!shareBlob) return;
+  if (!shareBlob) throw new Error("图片尚未准备完成，请稍后重试");
   const player = selectedPlayer();
   if (action === "download") {
     const url = URL.createObjectURL(shareBlob);
@@ -381,13 +419,11 @@ async function runShareAction(action) {
     link.download = `${player?.player_name || "player"}-salary-percentile.png`;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    els.shareFeedback.textContent = "图片已下载";
-    return;
+    return { status: "success", message: "图片已下载" };
   }
   if (action === "copy") {
     await copyShareImage();
-    els.shareFeedback.textContent = "图片已复制，可直接粘贴";
-    return;
+    return { status: "success", message: "图片已复制，可直接粘贴" };
   }
   if (action === "social") {
     const file = new File(
@@ -402,16 +438,16 @@ async function runShareAction(action) {
           text: "数据by库昊&via salary.surennba.com",
           files: [file],
         });
-        els.shareFeedback.textContent = "分享已完成";
+        return { status: "success", message: "分享已完成" };
       } catch (error) {
         if (error?.name !== "AbortError") throw error;
-        els.shareFeedback.textContent = "已取消分享";
+        return { status: "error", message: "已取消分享" };
       }
-      return;
     }
     await copyShareImage();
-    els.shareFeedback.textContent = "设备不支持分享，图片已复制";
+    return { status: "success", message: "设备不支持分享，图片已复制" };
   }
+  throw new Error("未知分享操作");
 }
 
 function metricRowHtml(player, field) {
@@ -531,20 +567,6 @@ function renderPlayer() {
   updateUrl(player);
 }
 
-function populateTeamFilter() {
-  const teams = [...new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean))]
-    .sort((a, b) => {
-      if (a === "NA") return 1;
-      if (b === "NA") return -1;
-      return a.localeCompare(b);
-    });
-  els.teamFilter.replaceChildren(
-    new Option("全联盟", "ALL"),
-    ...teams.map((team) => new Option(teamDisplayName(team), team)),
-  );
-  els.teamFilter.value = state.selectedTeam;
-}
-
 function populatePlayerFilter(preferredPlayerId = state.selectedPlayerId) {
   const players = playerOptions();
   els.playerFilter.replaceChildren(
@@ -554,6 +576,14 @@ function populatePlayerFilter(preferredPlayerId = state.selectedPlayerId) {
   const preferred = players.find((player) => player.player_id === preferredPlayerId);
   state.selectedPlayerId = preferred?.player_id ?? null;
   els.playerFilter.value = state.selectedPlayerId ? String(state.selectedPlayerId) : "";
+}
+
+function chooseTeam(team) {
+  state.selectedTeam = team;
+  updateTeamPicker(els, state.selectedTeam);
+  setTeamPickerOpen(els, false);
+  populatePlayerFilter();
+  renderPlayer();
 }
 
 function syncThemeSlider() {
@@ -572,10 +602,19 @@ function bindEvents() {
     els.shareMenu.addEventListener("click", (event) => {
       const actionButton = event.target.closest("[data-player-share-action]");
       if (!actionButton || actionButton.disabled) return;
+      const pendingMessages = {
+        social: "正在打开系统分享…",
+        copy: "正在复制图片…",
+        download: "正在下载图片…",
+      };
+      setShareActionState(actionButton, "pending", pendingMessages[actionButton.dataset.playerShareAction]);
       setShareActionsDisabled(true);
       runShareAction(actionButton.dataset.playerShareAction)
+        .then(({ status, message }) => {
+          setShareActionState(actionButton, status, message);
+        })
         .catch((error) => {
-          els.shareFeedback.textContent = error.message || "操作失败，请重试";
+          setShareActionState(actionButton, "error", error.message || "操作失败，请重试");
         })
         .finally(() => setShareActionsDisabled(false));
     });
@@ -588,10 +627,56 @@ function bindEvents() {
       els.shareButton.focus();
     });
   }
-  els.teamFilter.addEventListener("change", () => {
-    state.selectedTeam = els.teamFilter.value;
-    populatePlayerFilter();
-    renderPlayer();
+  els.teamFilterButton.addEventListener("click", () => {
+    setTeamPickerOpen(els, els.teamFilterButton.getAttribute("aria-expanded") !== "true");
+  });
+  els.teamFilterButton.addEventListener("keydown", (event) => {
+    const open = els.teamFilterButton.getAttribute("aria-expanded") === "true";
+    if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      event.preventDefault();
+      setTeamPickerOpen(els, true);
+      if (event.key === "ArrowDown") moveActiveOption(els, 0, state.selectedTeam);
+      else setActiveOptionEdge(els, "last");
+      return;
+    }
+    if (!open) return;
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        moveActiveOption(els, 1, state.selectedTeam);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        moveActiveOption(els, -1, state.selectedTeam);
+        break;
+      case "Home":
+        event.preventDefault();
+        setActiveOptionEdge(els, "first");
+        break;
+      case "End":
+        event.preventDefault();
+        setActiveOptionEdge(els, "last");
+        break;
+      case "Enter":
+      case " ": {
+        event.preventDefault();
+        const active = getActiveOption(els);
+        if (active) chooseTeam(active.dataset.team);
+        break;
+      }
+    }
+  });
+  els.teamFilterMenu.addEventListener("click", (event) => {
+    const option = event.target.closest(".team-picker__option");
+    if (option) chooseTeam(option.dataset.team);
+  });
+  document.addEventListener("click", (event) => {
+    if (!els.teamPicker.contains(event.target)) setTeamPickerOpen(els, false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || els.teamFilterButton.getAttribute("aria-expanded") !== "true") return;
+    setTeamPickerOpen(els, false);
+    els.teamFilterButton.focus();
   });
   els.playerFilter.addEventListener("change", () => {
     state.selectedPlayerId = Number(els.playerFilter.value) || null;
@@ -632,7 +717,7 @@ async function init() {
   state.selectedTeam = requestedPlayer?.team_abbreviation || "ALL";
   state.scope = params.get("scope") === "position" ? "position" : "league";
 
-  populateTeamFilter();
+  setupTeamPicker(els, state.data, state.selectedTeam);
   populatePlayerFilter(state.selectedPlayerId);
   bindEvents();
   renderPlayer();

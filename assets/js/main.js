@@ -19,7 +19,7 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260730-5";
+} from "./teamPicker.js?v=20260807-1";
 import {
   initChart,
   resizeChart,
@@ -92,6 +92,7 @@ let urlTimer;
 let hoverFrame;
 let shareBlob = null;
 let sharePrepareToken = 0;
+const shareActionResetTimers = new Map();
 const rankingModeLabels = {
   average: "平均",
   median: "中位数",
@@ -189,11 +190,34 @@ function setShareActionsDisabled(disabled) {
   });
 }
 
+function resetShareActionState(button) {
+  window.clearTimeout(shareActionResetTimers.get(button));
+  shareActionResetTimers.delete(button);
+  button.dataset.state = "idle";
+  button.removeAttribute("aria-label");
+}
+
+function resetShareActionStates() {
+  els.chartShareMenu.querySelectorAll("[data-share-action]").forEach(resetShareActionState);
+}
+
+function setShareActionState(button, status, message, { autoReset = true } = {}) {
+  window.clearTimeout(shareActionResetTimers.get(button));
+  button.dataset.state = status;
+  const label = button.querySelector(".share-action__label")?.textContent || "分享操作";
+  button.setAttribute("aria-label", `${label}：${message}`);
+  els.chartShareFeedback.textContent = message;
+  if (!autoReset || (status !== "success" && status !== "error")) return;
+  const timer = window.setTimeout(() => resetShareActionState(button), 3000);
+  shareActionResetTimers.set(button, timer);
+}
+
 function setShareMenuOpen(open) {
   els.chartShareButton.setAttribute("aria-expanded", String(open));
   els.chartShareMenu.hidden = !open;
   if (!open) return;
   shareBlob = null;
+  resetShareActionStates();
   const token = ++sharePrepareToken;
   setShareActionsDisabled(true);
   els.chartShareFeedback.textContent = "正在准备图片…";
@@ -206,7 +230,9 @@ function setShareMenuOpen(open) {
     })
     .catch(() => {
       if (token !== sharePrepareToken) return;
-      els.chartShareFeedback.textContent = "图片生成失败，请重试";
+      els.chartShareMenu.querySelectorAll("[data-share-action]").forEach((button) => {
+        setShareActionState(button, "error", "图片生成失败，请重新打开分享菜单重试", { autoReset: false });
+      });
     });
 }
 
@@ -224,7 +250,7 @@ async function copyShareImage() {
 }
 
 async function runShareAction(action) {
-  if (!shareBlob) return;
+  if (!shareBlob) throw new Error("图片尚未准备完成，请稍后重试");
   if (action === "download") {
     const url = URL.createObjectURL(shareBlob);
     const link = document.createElement("a");
@@ -232,13 +258,11 @@ async function runShareAction(action) {
     link.download = "salary-scatter.png";
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    els.chartShareFeedback.textContent = "图片已下载";
-    return;
+    return { status: "success", message: "图片已下载" };
   }
   if (action === "copy") {
     await copyShareImage();
-    els.chartShareFeedback.textContent = "图片已复制，可直接粘贴";
-    return;
+    return { status: "success", message: "图片已复制，可直接粘贴" };
   }
   if (action === "social") {
     const file = shareFile();
@@ -249,16 +273,16 @@ async function runShareAction(action) {
           text: "数据by库昊&via salary.surennba.com",
           files: [file],
         });
-        els.chartShareFeedback.textContent = "分享已完成";
+        return { status: "success", message: "分享已完成" };
       } catch (error) {
         if (error?.name !== "AbortError") throw error;
-        els.chartShareFeedback.textContent = "已取消分享";
+        return { status: "error", message: "已取消分享" };
       }
-      return;
     }
     await copyShareImage();
-    els.chartShareFeedback.textContent = "设备不支持系统分享，图片已复制";
+    return { status: "success", message: "设备不支持系统分享，图片已复制" };
   }
+  throw new Error("未知分享操作");
 }
 
 function syncSelectedPlayerLabel() {
@@ -377,10 +401,19 @@ function bindEvents() {
   els.chartShareMenu.addEventListener("click", (event) => {
     const actionButton = event.target.closest("[data-share-action]");
     if (!actionButton || actionButton.disabled) return;
+    const pendingMessages = {
+      social: "正在打开系统分享…",
+      copy: "正在复制图片…",
+      download: "正在下载图片…",
+    };
+    setShareActionState(actionButton, "pending", pendingMessages[actionButton.dataset.shareAction]);
     setShareActionsDisabled(true);
     runShareAction(actionButton.dataset.shareAction)
+      .then(({ status, message }) => {
+        setShareActionState(actionButton, status, message);
+      })
       .catch((error) => {
-        els.chartShareFeedback.textContent = error.message || "操作失败，请重试";
+        setShareActionState(actionButton, "error", error.message || "操作失败，请重试");
       })
       .finally(() => setShareActionsDisabled(false));
   });

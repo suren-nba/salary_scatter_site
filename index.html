@@ -18,9 +18,9 @@
     </script>
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/vendor/tabulator.min.css">
-    <link rel="stylesheet" href="./assets/css/style.css?v=20260806-3">
+    <link rel="stylesheet" href="./assets/css/style.css?v=20260807-2">
     <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
-    <link rel="modulepreload" href="./assets/js/main.js?v=20260731-3">
+    <link rel="modulepreload" href="./assets/js/main.js?v=20260807-1">
   </head>
   <body>
     <header class="topbar">
@@ -124,7 +124,12 @@
         </label>
         <label class="toggle-control">
           <input id="avatarToggle" type="checkbox" checked>
-          <span>散点适量显示头像</span>
+          <span class="toggle-control__checkbox" aria-hidden="true">
+            <svg viewBox="0 0 16 16" focusable="false">
+              <path d="m3.5 8.2 2.8 2.8 6.2-6.2"></path>
+            </svg>
+          </span>
+          <span class="toggle-control__label">显示头像</span>
         </label>
         <button id="resetBtn" class="reset-button" type="button">重置</button>
       </section>
@@ -142,9 +147,33 @@
           <div id="chartShare" class="chart-share">
             <button id="chartShareButton" class="chart-share__button" type="button" aria-haspopup="menu" aria-expanded="false">分享</button>
             <div id="chartShareMenu" class="chart-share__menu" role="menu" hidden>
-              <button type="button" role="menuitem" data-share-action="social" disabled>社交媒体</button>
-              <button type="button" role="menuitem" data-share-action="copy" disabled>复制粘贴</button>
-              <button type="button" role="menuitem" data-share-action="download" disabled>下载本地</button>
+              <button type="button" role="menuitem" data-share-action="social" data-state="idle" disabled>
+                <span class="share-action__icon" aria-hidden="true">
+                  <svg class="share-action__glyph share-action__glyph--idle" viewBox="0 0 20 20"><circle cx="5" cy="10" r="2"></circle><circle cx="15" cy="5" r="2"></circle><circle cx="15" cy="15" r="2"></circle><path d="m6.8 9.1 6.4-3.2M6.8 10.9l6.4 3.2"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--pending" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"></circle></svg>
+                  <svg class="share-action__glyph share-action__glyph--success" viewBox="0 0 20 20"><path d="m4.5 10.3 3.4 3.4 7.6-7.6"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--error" viewBox="0 0 20 20"><path d="m5.5 5.5 9 9m0-9-9 9"></path></svg>
+                </span>
+                <span class="share-action__label">社交媒体</span>
+              </button>
+              <button type="button" role="menuitem" data-share-action="copy" data-state="idle" disabled>
+                <span class="share-action__icon" aria-hidden="true">
+                  <svg class="share-action__glyph share-action__glyph--idle" viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="9" rx="2"></rect><path d="M13 7V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h1"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--pending" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"></circle></svg>
+                  <svg class="share-action__glyph share-action__glyph--success" viewBox="0 0 20 20"><path d="m4.5 10.3 3.4 3.4 7.6-7.6"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--error" viewBox="0 0 20 20"><path d="m5.5 5.5 9 9m0-9-9 9"></path></svg>
+                </span>
+                <span class="share-action__label">复制粘贴</span>
+              </button>
+              <button type="button" role="menuitem" data-share-action="download" data-state="idle" disabled>
+                <span class="share-action__icon" aria-hidden="true">
+                  <svg class="share-action__glyph share-action__glyph--idle" viewBox="0 0 20 20"><path d="M10 3v9m-3.5-3.5L10 12l3.5-3.5M4 15.5h12"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--pending" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"></circle></svg>
+                  <svg class="share-action__glyph share-action__glyph--success" viewBox="0 0 20 20"><path d="m4.5 10.3 3.4 3.4 7.6-7.6"></path></svg>
+                  <svg class="share-action__glyph share-action__glyph--error" viewBox="0 0 20 20"><path d="m5.5 5.5 9 9m0-9-9 9"></path></svg>
+                </span>
+                <span class="share-action__label">下载本地</span>
+              </button>
               <span id="chartShareFeedback" class="chart-share__feedback" role="status" aria-live="polite"></span>
             </div>
           </div>
@@ -237,7 +266,7 @@
             </div></div>
           </details>
         </div>
-        <p class="methodology-link">所有数据的具体算法说明：<a href="https://weibo.com/ttarticle/p/show?id=2309405316644200644649" target="_blank" rel="noopener noreferrer">查看微博原文</a></p>
+        <p class="methodology-link">所有数据的具体算法说明：<a href="https://weibo.com/ttarticle/p/show?id=2309405316644200644649" target="_blank" rel="noopener noreferrer">查看微博原文1</a> · <a href="https://weibo.com/1894121447/RaBCLrXvv" target="_blank" rel="noopener noreferrer">查看微博原文2</a></p>
       </section>
     </main>
 
@@ -274,7 +303,7 @@
 
     <script src="./assets/vendor/echarts.min.js"></script>
     <script src="./assets/vendor/tabulator.min.js"></script>
-    <script type="module" src="./assets/js/main.js?v=20260731-3"></script>
+    <script type="module" src="./assets/js/main.js?v=20260807-1"></script>
     <script type="module" src="./assets/js/dock.js?v=20260806-1"></script>
   </body>
 </html>

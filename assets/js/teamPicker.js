@@ -35,11 +35,11 @@ export function setTeamPickerOpen(els, open) {
   if (!open) setActiveOption(els, null);
 }
 
-export function moveActiveOption(els, delta) {
+export function moveActiveOption(els, delta, selectedTeam = state.selectedTeam) {
   const options = getOptions(els);
   if (!options.length) return;
   const current = options.findIndex((opt) => opt.classList.contains("team-picker__option--active"));
-  const selected = options.findIndex((opt) => opt.dataset.team === state.selectedTeam);
+  const selected = options.findIndex((opt) => opt.dataset.team === selectedTeam);
   let next = current >= 0 ? current + delta : (selected >= 0 ? selected : 0);
   next = Math.max(0, Math.min(options.length - 1, next));
   setActiveOption(els, options[next]);
@@ -55,19 +55,19 @@ export function getActiveOption(els) {
   return getOptions(els).find((opt) => opt.classList.contains("team-picker__option--active")) || null;
 }
 
-export function updateTeamPicker(els) {
-  const hasLogo = teamHasLogo(state.selectedTeam);
+export function updateTeamPicker(els, selectedTeam = state.selectedTeam) {
+  const hasLogo = teamHasLogo(selectedTeam);
   els.teamFilterLogo.hidden = !hasLogo;
-  els.teamFilterLabel.textContent = teamDisplayName(state.selectedTeam);
+  els.teamFilterLabel.textContent = teamDisplayName(selectedTeam);
   if (hasLogo) {
-    els.teamFilterLogo.src = teamLogoPath(state.selectedTeam);
-    els.teamFilterLogo.alt = `${state.selectedTeam} 队徽`;
+    els.teamFilterLogo.src = teamLogoPath(selectedTeam);
+    els.teamFilterLogo.alt = `${selectedTeam} 队徽`;
   } else {
     els.teamFilterLogo.removeAttribute("src");
     els.teamFilterLogo.alt = "";
   }
   els.teamFilterMenu.querySelectorAll(".team-picker__option").forEach((option) => {
-    option.setAttribute("aria-selected", String(option.dataset.team === state.selectedTeam));
+    option.setAttribute("aria-selected", String(option.dataset.team === selectedTeam));
   });
 }
 
@@ -99,13 +99,13 @@ function makeTeamOption(team) {
   return option;
 }
 
-export function setupTeamPicker(els) {
+export function setupTeamPicker(els, data = state.data, selectedTeam = state.selectedTeam) {
   const fragment = document.createDocumentFragment();
   fragment.appendChild(makeTeamOption("ALL"));
-  const availableTeams = new Set(state.data.map((row) => row.team_abbreviation).filter(Boolean));
+  const availableTeams = new Set(data.map((row) => row.team_abbreviation).filter(Boolean));
   if (availableTeams.has("NA")) fragment.appendChild(makeTeamOption("NA"));
   const teams = [...availableTeams].filter((team) => team !== "NA").sort();
   teams.forEach((team) => fragment.appendChild(makeTeamOption(team)));
   els.teamFilterMenu.replaceChildren(fragment);
-  updateTeamPicker(els);
+  updateTeamPicker(els, selectedTeam);
 }
