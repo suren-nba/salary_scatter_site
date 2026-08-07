@@ -39,6 +39,7 @@
 }
 
 .player-controls select:focus,
+.player-controls .team-picker__button:focus-visible,
 .scope-switch button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--dark) 28%, transparent);
   outline-offset: 3px;
