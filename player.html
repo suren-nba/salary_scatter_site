@@ -19,8 +19,7 @@
     <link rel="icon" href="./assets/brand/sr-logo.png?v=20260728-3">
     <link rel="stylesheet" href="./assets/css/style.css?v=20260808-1">
     <link rel="stylesheet" href="./assets/css/player.css?v=20260808-1">
-    <link id="salaryDataPreload" rel="preload" href="./data/salary_scatter_web.json?v=data-20260730-1" as="fetch" crossorigin="anonymous" fetchpriority="high">
-    <link rel="modulepreload" href="./assets/js/player.js?v=20260807-6">
+    <link rel="modulepreload" href="./assets/js/player.js?v=20260808-1">
   </head>
   <body>
     <header class="topbar">
@@ -51,7 +50,7 @@
         <div class="team-filter-control player-team-control">
           <span>球队筛选</span>
           <div id="playerTeamPicker" class="team-picker">
-            <button id="playerTeamFilterButton" class="team-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <button id="playerTeamFilterButton" class="team-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false" disabled>
               <img id="playerTeamFilterLogo" class="team-picker__logo" alt="" width="28" height="28" decoding="async" hidden>
               <span id="playerTeamFilterLabel" class="team-picker__label">全联盟</span>
               <span class="team-picker__chevron" aria-hidden="true"></span>
@@ -61,13 +60,15 @@
         </div>
         <label>
           <span>球员筛选</span>
-          <select id="playerFilter"></select>
+          <select id="playerFilter" disabled>
+            <option value="">球员数据加载中…</option>
+          </select>
         </label>
         <fieldset class="percentile-scope">
           <legend>百分位范围</legend>
           <div class="scope-switch">
-            <button type="button" data-scope="league" aria-pressed="true">全联盟</button>
-            <button type="button" data-scope="position" aria-pressed="false">同位置</button>
+            <button type="button" data-scope="league" aria-pressed="true" disabled>全联盟</button>
+            <button type="button" data-scope="position" aria-pressed="false" disabled>同位置</button>
           </div>
         </fieldset>
       </section>
@@ -79,7 +80,7 @@
           </div>
           <div class="player-profile__identity">
             <p id="playerEyebrow">球员薪资价值百分位</p>
-            <h2 id="playerName">数据加载中…</h2>
+            <h2 id="playerName">请选择球员</h2>
             <div class="player-meta" id="playerMeta"></div>
           </div>
           <div class="player-profile__aside">
@@ -88,7 +89,7 @@
               <strong id="benchmarkCount">--</strong>
             </div>
             <div id="playerShare" class="chart-share player-share">
-              <button id="playerShareButton" class="chart-share__button" type="button" aria-haspopup="menu" aria-expanded="false">分享</button>
+              <button id="playerShareButton" class="chart-share__button" type="button" aria-haspopup="menu" aria-expanded="false" disabled>分享</button>
               <div id="playerShareMenu" class="chart-share__menu" role="menu" hidden>
                 <button type="button" role="menuitem" data-player-share-action="social" data-state="idle" disabled>
                   <span class="share-action__icon" aria-hidden="true">
@@ -130,7 +131,7 @@
         </div>
 
         <div id="metricGroups" class="metric-groups">
-          <p class="player-loading">正在加载球员数据…</p>
+          <p class="player-empty">请先通过球队和球员筛选选择一名球员。</p>
         </div>
       </section>
 
@@ -175,7 +176,7 @@
       </div>
     </nav>
 
-    <script type="module" src="./assets/js/player.js?v=20260807-6"></script>
-    <script type="module" src="./assets/js/dock.js?v=20260807-6"></script>
+    <script type="module" src="./assets/js/player.js?v=20260808-1"></script>
+    <script type="module" src="./assets/js/dock.js?v=20260808-1"></script>
   </body>
 </html>

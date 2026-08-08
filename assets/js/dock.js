@@ -3,7 +3,7 @@ import {
   getThemeIndex,
   getThemeLabel,
   setThemeByIndex,
-} from "./theme.js?v=20260807-3";
+} from "./theme.js?v=20260808-1";
 
 const panel = document.querySelector(".site-dock__panel");
 const items = panel ? [...panel.querySelectorAll("[data-dock-item]")] : [];

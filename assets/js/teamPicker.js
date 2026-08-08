@@ -1,9 +1,8 @@
-import { state } from "./state.js?v=20260728-6";
 import {
   teamDisplayName,
   teamHasLogo,
   teamLogoPath,
-} from "./format.js?v=20260728-6";
+} from "./format.js?v=20260808-1";
 
 function optionId(team) {
   return `team-option-${team === "ALL" ? "all" : team}`;
@@ -35,7 +34,7 @@ export function setTeamPickerOpen(els, open) {
   if (!open) setActiveOption(els, null);
 }
 
-export function moveActiveOption(els, delta, selectedTeam = state.selectedTeam) {
+export function moveActiveOption(els, delta, selectedTeam = "ALL") {
   const options = getOptions(els);
   if (!options.length) return;
   const current = options.findIndex((opt) => opt.classList.contains("team-picker__option--active"));
@@ -55,7 +54,7 @@ export function getActiveOption(els) {
   return getOptions(els).find((opt) => opt.classList.contains("team-picker__option--active")) || null;
 }
 
-export function updateTeamPicker(els, selectedTeam = state.selectedTeam) {
+export function updateTeamPicker(els, selectedTeam = "ALL") {
   const hasLogo = teamHasLogo(selectedTeam);
   els.teamFilterLogo.hidden = !hasLogo;
   els.teamFilterLabel.textContent = teamDisplayName(selectedTeam);
@@ -99,7 +98,7 @@ function makeTeamOption(team) {
   return option;
 }
 
-export function setupTeamPicker(els, data = state.data, selectedTeam = state.selectedTeam) {
+export function setupTeamPicker(els, data = [], selectedTeam = "ALL") {
   const fragment = document.createDocumentFragment();
   fragment.appendChild(makeTeamOption("ALL"));
   const availableTeams = new Set(data.map((row) => row.team_abbreviation).filter(Boolean));

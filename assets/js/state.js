@@ -1,4 +1,4 @@
-import { aggregate, isNumber } from "./format.js?v=20260728-6";
+import { aggregate, isNumber } from "./format.js?v=20260808-1";
 
 export const state = {
   data: [],

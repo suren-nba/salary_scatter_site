@@ -6,14 +6,15 @@ import {
   metricLabels,
   metricOrder,
   teamDisplayName,
-} from "./format.js?v=20260728-3";
+} from "./format.js?v=20260808-1";
+import { loadSalaryData } from "./dataLoader.js?v=20260808-1";
 import {
   getTheme,
   getThemeIndex,
   getThemeLabel,
   initTheme,
   setThemeByIndex,
-} from "./theme.js?v=20260807-3";
+} from "./theme.js?v=20260808-1";
 import {
   getActiveOption,
   moveActiveOption,
@@ -21,7 +22,7 @@ import {
   setTeamPickerOpen,
   setupTeamPicker,
   updateTeamPicker,
-} from "./teamPicker.js?v=20260807-1";
+} from "./teamPicker.js?v=20260808-1";
 
 const state = {
   data: [],
@@ -73,6 +74,33 @@ const metricGroups = [
 
 function selectedPlayer() {
   return state.data.find((row) => row.player_id === state.selectedPlayerId) || null;
+}
+
+function setDataControlsDisabled(disabled) {
+  els.teamFilterButton.disabled = disabled;
+  els.playerFilter.disabled = disabled;
+  els.scopeButtons.forEach((button) => {
+    button.disabled = disabled;
+  });
+  if (disabled) setTeamPickerOpen(els, false);
+}
+
+function renderLoadingState() {
+  setShareMenuOpen(false);
+  document.title = "球员薪资价值百分位";
+  els.eyebrow.textContent = "球员薪资价值百分位";
+  els.name.textContent = "数据加载中…";
+  els.meta.innerHTML = "";
+  els.benchmarkLabel.textContent = state.scope === "position" ? "同位置百分位" : "全联盟百分位";
+  els.benchmarkCount.textContent = "--";
+  els.scopeButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.scope === state.scope));
+  });
+  els.metricGroups.innerHTML = '<p class="player-loading">正在加载球员数据…</p>';
+  if (els.shareButton) els.shareButton.disabled = true;
+  els.portrait.hidden = true;
+  els.portraitWrap.classList.add("player-portrait--empty");
+  els.profileHeader.classList.add("player-profile__header--no-portrait");
 }
 
 function playerOptions() {
@@ -703,28 +731,30 @@ function bindEvents() {
 async function init() {
   initTheme();
   syncThemeSlider();
-  const response = await fetch(
-    document.getElementById("salaryDataPreload").href,
-    { cache: "force-cache" },
-  );
-  if (!response.ok) throw new Error(`Failed to load data: HTTP ${response.status}`);
-  state.data = await response.json();
-
   const params = new URLSearchParams(window.location.search);
   const requestedId = Number(params.get("id"));
+  state.scope = params.get("scope") === "position" ? "position" : "league";
+
+  setDataControlsDisabled(true);
+  if (requestedId) renderLoadingState();
+  else renderPlayer();
+  bindEvents();
+
+  state.data = await loadSalaryData();
   const requestedPlayer = state.data.find((row) => row.player_id === requestedId);
   state.selectedPlayerId = requestedPlayer?.player_id ?? null;
   state.selectedTeam = requestedPlayer?.team_abbreviation || "ALL";
-  state.scope = params.get("scope") === "position" ? "position" : "league";
 
   setupTeamPicker(els, state.data, state.selectedTeam);
   populatePlayerFilter(state.selectedPlayerId);
-  bindEvents();
+  setDataControlsDisabled(false);
   renderPlayer();
 }
 
 init().catch((error) => {
   console.error(error);
+  setDataControlsDisabled(true);
+  els.playerFilter.replaceChildren(new Option("数据加载失败", ""));
   els.name.textContent = "数据加载失败";
   els.metricGroups.innerHTML = '<p class="player-empty">请检查网络连接或稍后刷新。</p>';
 });

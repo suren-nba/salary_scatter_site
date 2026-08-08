@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=20260728-6";
+import { state } from "./state.js?v=20260808-1";
 import {
   aggregate,
   escapeHtml,
@@ -8,8 +8,8 @@ import {
   metricLabels,
   numberFontFamily,
   teamDisplayName,
-} from "./format.js?v=20260728-6";
-import { getTheme } from "./theme.js?v=20260807-3";
+} from "./format.js?v=20260808-1";
+import { getTheme } from "./theme.js?v=20260808-1";
 
 let chart = null;
 let chartEl = null;

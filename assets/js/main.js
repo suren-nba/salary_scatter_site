@@ -10,8 +10,9 @@ import {
   ordinal,
   teamDisplayName,
   teamHasLogo,
-} from "./format.js?v=20260728-6";
-import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260728-6";
+} from "./format.js?v=20260808-1";
+import { loadSalaryData } from "./dataLoader.js?v=20260808-1";
+import { state, applyFilters, teamScopeRows, extremePlayer, teamRank } from "./state.js?v=20260808-1";
 import {
   setupTeamPicker,
   updateTeamPicker,
@@ -19,14 +20,14 @@ import {
   moveActiveOption,
   setActiveOptionEdge,
   getActiveOption,
-} from "./teamPicker.js?v=20260807-1";
+} from "./teamPicker.js?v=20260808-1";
 import {
   initChart,
   resizeChart,
   updateChart,
   createChartShareBlob,
   getChartShareTitle,
-} from "./chart.js?v=20260730-2";
+} from "./chart.js?v=20260808-1";
 import {
   setupTable,
   updateTable,
@@ -34,14 +35,14 @@ import {
   syncBeeswarmMetricHeader,
   syncTableScopeFilters,
   downloadTableData,
-} from "./table.js?v=20260731-3";
+} from "./table.js?v=20260808-1";
 import {
   initBeeswarm,
   resizeBeeswarm,
   updateBeeswarm,
-} from "./beeswarm.js?v=20260807-2";
-import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260807-3";
-import { applyUrlState, writeUrlState } from "./urlState.js?v=20260728-6";
+} from "./beeswarm.js?v=20260808-1";
+import { initTheme, setThemeByIndex, getTheme, getThemeIndex, getThemeLabel } from "./theme.js?v=20260808-1";
+import { applyUrlState, writeUrlState } from "./urlState.js?v=20260808-1";
 
 const els = {
   statTeam: document.getElementById("statTeam"),
@@ -99,6 +100,55 @@ const rankingModeLabels = {
   median: "中位数",
   total: "总数",
 };
+const playerPrefetchUrls = new Set();
+
+function addPlayerPrefetch(href, as) {
+  const url = new URL(href, document.baseURI);
+  url.hash = "";
+  if (playerPrefetchUrls.has(url.href)) return;
+
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.href = url.href;
+  if (as) link.as = as;
+  if (as === "script") link.crossOrigin = "anonymous";
+  document.head.appendChild(link);
+  playerPrefetchUrls.add(url.href);
+}
+
+function prefetchPlayerPage(documentHref = "./player.html") {
+  addPlayerPrefetch(documentHref);
+  addPlayerPrefetch("./assets/css/player.css?v=20260808-1", "style");
+  addPlayerPrefetch("./assets/js/player.js?v=20260808-1", "script");
+}
+
+function playerLinkFromEvent(event) {
+  const anchor = event.target.closest?.("a[href]");
+  if (!anchor) return null;
+  const url = new URL(anchor.href, document.baseURI);
+  return url.origin === location.origin && url.pathname.endsWith("/player.html")
+    ? url.href
+    : null;
+}
+
+function bindPlayerPrefetchIntent() {
+  const onIntent = (event) => {
+    const playerHref = playerLinkFromEvent(event);
+    if (playerHref) prefetchPlayerPage(playerHref);
+  };
+  document.addEventListener("pointerover", onIntent, { passive: true });
+  document.addEventListener("pointerdown", onIntent, { passive: true });
+  document.addEventListener("touchstart", onIntent, { passive: true });
+}
+
+function schedulePlayerPrefetch() {
+  const prefetch = () => prefetchPlayerPage();
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(prefetch, { timeout: 2000 });
+  } else {
+    window.setTimeout(prefetch, 1200);
+  }
+}
 
 function scheduleUrlWrite() {
   window.clearTimeout(urlTimer);
@@ -359,7 +409,7 @@ function setSharedScope({
     els.yMetric.value = state.yMetric;
     syncChartAxisSummary();
   }
-  updateTeamPicker(els);
+  updateTeamPicker(els, state.selectedTeam);
   els.positionFilter.value = state.selectedPosition;
   syncTableScopeFilters(state.selectedTeam, state.selectedPosition);
   if (closeTeamPicker) setTeamPickerOpen(els, false);
@@ -414,7 +464,7 @@ function setupSelects() {
   });
   els.xMetric.value = state.xMetric;
   els.yMetric.value = state.yMetric;
-  setupTeamPicker(els);
+  setupTeamPicker(els, state.data, state.selectedTeam);
 }
 
 function bindEvents() {
@@ -453,7 +503,7 @@ function bindEvents() {
     if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
       event.preventDefault();
       setTeamPickerOpen(els, true);
-      if (event.key === "ArrowDown") moveActiveOption(els, 0);
+      if (event.key === "ArrowDown") moveActiveOption(els, 0, state.selectedTeam);
       else setActiveOptionEdge(els, "last");
       return;
     }
@@ -461,11 +511,11 @@ function bindEvents() {
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
-        moveActiveOption(els, 1);
+        moveActiveOption(els, 1, state.selectedTeam);
         break;
       case "ArrowUp":
         event.preventDefault();
-        moveActiveOption(els, -1);
+        moveActiveOption(els, -1, state.selectedTeam);
         break;
       case "Home":
         event.preventDefault();
@@ -544,7 +594,7 @@ function bindEvents() {
     state.selectedPlayerId = null;
     state.hoveredPlayerId = null;
     state.tableVisiblePlayerIds = null;
-    updateTeamPicker(els);
+    updateTeamPicker(els, state.selectedTeam);
     setTeamPickerOpen(els, false);
     els.positionFilter.value = state.selectedPosition;
     syncTableScopeFilters(state.selectedTeam, state.selectedPosition);
@@ -575,25 +625,15 @@ function bindEvents() {
   });
 }
 
-async function fetchJson() {
-  const response = await fetch(
-    document.getElementById("salaryDataPreload").href,
-    { cache: "force-cache" },
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to load salary data: HTTP ${response.status}`);
-  }
-  return response.json();
-}
-
 async function init() {
   if (!window.echarts || !window.Tabulator) {
     throw new Error("ECharts or Tabulator did not load.");
   }
+  bindPlayerPrefetchIntent();
   initTheme();
   syncThemeSlider();
 
-  const data = await fetchJson();
+  const data = await loadSalaryData();
   state.data = data;
 
   setupSelects();
@@ -605,7 +645,7 @@ async function init() {
   });
   applyUrlState(els);
   syncChartAxisSummary();
-  updateTeamPicker(els);
+  updateTeamPicker(els, state.selectedTeam);
   syncSelectedPlayerLabel();
   applyFilters();
   const tableInstance = setupTable("#salaryTable", {
@@ -626,6 +666,7 @@ async function init() {
   updateBeeswarm();
   bindEvents();
   scheduleUrlWrite();
+  schedulePlayerPrefetch();
 }
 
 init().catch((error) => {
