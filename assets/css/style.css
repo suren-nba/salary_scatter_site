@@ -1710,6 +1710,21 @@ footer a {
     flex-direction: column;
   }
 
+  .chart-section > .section-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: end;
+  }
+
+  .chart-section > .section-heading > div:first-child {
+    min-width: 0;
+  }
+
+  .chart-section > .section-heading .chart-share {
+    align-self: end;
+  }
+
   .table-section__heading {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

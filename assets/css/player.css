@@ -422,16 +422,6 @@
     grid-template-columns: 1fr;
   }
 
-  .topbar__meta {
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 8px;
-  }
-
-  .topbar__meta .source-credit {
-    grid-column: 1 / -1;
-    white-space: nowrap;
-  }
-
   .percentile-scope {
     grid-column: auto;
   }
