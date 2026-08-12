@@ -115,7 +115,6 @@
 .player-portrait img {
   width: 112px;
   height: 112px;
-  border: 2px solid color-mix(in srgb, var(--dark) 38%, var(--line));
   border-radius: 50%;
   background: var(--avatar-bg);
   object-fit: contain;

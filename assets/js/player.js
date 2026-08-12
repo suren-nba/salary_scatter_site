@@ -197,11 +197,6 @@ function drawHeadshot(context, image, x, y, size, colors) {
   const height = image.height * scale;
   context.drawImage(image, x + (size - width) / 2, y + (size - height) / 2, width, height);
   context.restore();
-  context.strokeStyle = colors.topbar;
-  context.lineWidth = 3;
-  context.beginPath();
-  context.arc(x + size / 2, y + size / 2, size / 2 - 1.5, 0, Math.PI * 2);
-  context.stroke();
 }
 
 function drawMetricRow(context, player, field, y, colors) {
