@@ -149,6 +149,202 @@ body {
   transition: background 160ms ease, color 160ms ease;
 }
 
+body.has-site-announcement {
+  overflow: hidden;
+}
+
+.site-announcement {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 48px);
+  background: color-mix(in srgb, var(--dark) 68%, transparent);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.site-announcement[hidden] {
+  display: none;
+}
+
+.site-announcement__card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: min(920px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 28px 80px color-mix(in srgb, var(--dark) 38%, transparent);
+}
+
+.site-announcement__message {
+  padding: clamp(28px, 5vw, 52px);
+}
+
+.site-announcement__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.site-announcement__eyebrow::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px var(--accent-tint-strong);
+  content: "";
+}
+
+.site-announcement h2 {
+  max-width: 13em;
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(28px, 4.2vw, 48px);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.site-announcement h2 time {
+  color: var(--accent-strong);
+  white-space: nowrap;
+}
+
+.site-announcement__copy {
+  max-width: 42em;
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: clamp(15px, 1.8vw, 18px);
+}
+
+.site-announcement__actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-width: 224px;
+  padding: clamp(28px, 4vw, 44px);
+  background: var(--accent-tint);
+}
+
+.site-announcement__primary,
+.site-announcement__secondary {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 11px 18px;
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-announcement__primary {
+  border: 1px solid var(--accent-strong);
+  color: #fffaf0;
+  background: var(--accent-strong);
+}
+
+.site-announcement__secondary {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.site-announcement__primary:hover,
+.site-announcement__primary:focus-visible {
+  background: var(--accent);
+}
+
+.site-announcement__primary:focus-visible,
+.site-announcement__secondary:focus-visible,
+.site-announcement__close:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 3px;
+}
+
+.site-announcement__close {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  font: inherit;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 720px), (orientation: portrait) and (max-width: 900px) {
+  .site-announcement {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .site-announcement__card {
+    grid-template-columns: 1fr;
+    width: min(560px, 100%);
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .site-announcement__message {
+    padding: 32px 24px 26px;
+  }
+
+  .site-announcement h2 {
+    padding-right: 20px;
+    font-size: clamp(28px, 8.5vw, 42px);
+  }
+
+  .site-announcement__copy {
+    margin-top: 16px;
+  }
+
+  .site-announcement__actions {
+    min-width: 0;
+    padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-announcement {
+    animation: announcement-fade-in 180ms ease-out both;
+  }
+
+  .site-announcement__card {
+    animation: announcement-card-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes announcement-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes announcement-card-in {
+  from { transform: translateY(18px) scale(0.98); }
+}
+
 a {
   color: inherit;
 }
